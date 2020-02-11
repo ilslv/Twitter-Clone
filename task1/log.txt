@@ -1,0 +1,17 @@
+commit 509b1ec3781008007794b846cc89d498050c7b77 (HEAD -> Lab1)
+Author: ilslv <ilya.solovyiov@gmail.com>
+Date:   Tue Feb 11 13:34:57 2020 +0300
+
+    add status.txt
+
+commit ff506e7781345af7f80f31d6c3e27cd617b7f07c
+Author: ilslv <ilya.solovyiov@gmail.com>
+Date:   Tue Feb 11 13:33:36 2020 +0300
+
+    add .gitignore
+
+commit 6f4e94a8685d4a1c7fff43d45345ef059208b92f (origin/master, origin/HEAD, master)
+Author: ilslv <47687266+ilslv@users.noreply.github.com>
+Date:   Tue Feb 11 13:26:25 2020 +0300
+
+    Initial commit
