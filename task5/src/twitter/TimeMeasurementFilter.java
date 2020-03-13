@@ -1,9 +1,11 @@
 package twitter;
 
 import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
+@WebFilter("/*")
 public class TimeMeasurementFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) {

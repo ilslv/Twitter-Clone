@@ -1,8 +1,10 @@
 package twitter;
 
 import javax.servlet.*;
+import javax.servlet.annotation.WebFilter;
 import java.io.IOException;
 
+@WebFilter("/get")
 public class GetLengthFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) {
