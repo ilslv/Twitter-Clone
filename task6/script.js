@@ -269,6 +269,9 @@ let api = (function () {
     };
 
     function validateSchema(validateOver, post) {
+        validateOver = validateOver || {};
+        post = post || {};
+
         if (Object.keys(validateOver).length !== Object.keys(post).length) {
             console.log('Mismatching number of keys!');
             return false;
@@ -371,3 +374,4 @@ let addedPost = api.getPost('1');
 addedPost.id = '21';
 console.log(api.addPost(addedPost));
 console.log(api.removePost('21'));
+console.log(api.getPosts());
