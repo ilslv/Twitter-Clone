@@ -268,17 +268,24 @@ let api = (function () {
         likes: val => Array.isArray(val)
     };
 
+    postSchema.id.required = true;
+    postSchema.description.required = true;
+    postSchema.createdAt.required = true;
+    postSchema.author.required = true;
+    postSchema.hashTags.required = true;
+    postSchema.likes.required = true;
+
     function validateSchema(validateOver, post) {
         validateOver = validateOver || {};
         post = post || {};
 
-        if (Object.keys(validateOver).length !== Object.keys(post).length) {
+        if (Object.keys(validateOver).filter(key => postSchema[key]?.required).length !== Object.keys(post).filter(key => postSchema[key]?.required).length) {
             console.log('Mismatching number of keys!');
             return false;
         }
 
         let errors = Object.keys(validateOver)
-            .filter(key => !postSchema[key]?.(post[key]))
+            .filter(key => (!postSchema[key]?.(post[key]) && postSchema[key]?.required) || !postSchema.hasOwnProperty(key))
             .map(key => new Error(key + ' is invalid!'));
 
         if (errors.length > 0) {
@@ -326,7 +333,7 @@ let api = (function () {
     }
 
     function addPost(post) {
-        if (!validatePost(post)) {
+        if (!validatePost(post) || posts.find(x => x.id === post.id)) {
             return false;
         }
 
@@ -375,3 +382,17 @@ addedPost.id = '21';
 console.log(api.addPost(addedPost));
 console.log(api.removePost('21'));
 console.log(api.getPosts());
+let postWithoutPhoto = {
+    id: '56',
+    description: 'Более 76 тыс. человек во всем мире уже излечились от заболевания, спровоцированного новым коронавирусом, тогда как количество смертей превысило 6,4 тыс.',
+    createdAt: new Date('2020-03-17T23:00:00'),
+    author: 'Иванов Иван',
+    hashTags: [
+        'coronavirus', 'virus'
+    ],
+    likes: [
+        'Иванов Иван'
+    ]
+}
+console.log(api.addPost(postWithoutPhoto));
+console.log(api.addPost(postWithoutPhoto));
