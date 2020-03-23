@@ -275,7 +275,7 @@ let api = (function () {
         }
 
         let errors = Object.keys(validateOver)
-            .filter(key => !postSchema[key](post[key]))
+            .filter(key => !postSchema[key]?.(post[key]))
             .map(key => new Error(key + ' is invalid!'));
 
         if (errors.length > 0) {
@@ -364,6 +364,7 @@ let api = (function () {
 console.log(api.getPosts(0, 10, {author: 'Иванов Иван', hashTags: ['coronavirus']}));
 console.log(api.getPost('1'));
 console.log(api.editPost('1', {description: 'edited description'}));
+console.log(api.editPost('1', {a: 'aaa'}));
 console.log(api.validatePost(api.getPost('1')));
 console.log(api.validatePost({id: '2'}));
 let addedPost = api.getPost('1');
