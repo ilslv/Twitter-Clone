@@ -1,0 +1,433 @@
+class api {
+    _posts = [];
+
+    _postSchema = {
+        id: (val) => typeof val === 'string',
+        description: (val) => typeof val === 'string' && val.length < 200,
+        createdAt: (val) => Object.prototype.toString.call(val) === '[object Date]',
+        author: (val) => typeof val === 'string' && val.length > 0,
+        photoLink: (val) => typeof val === 'string',
+        hashTags: (val) => Array.isArray(val),
+        likes: (val) => Array.isArray(val),
+    };
+
+    _validateSchema(validateOver = {}, post = {}) {
+        if (Object.keys(validateOver).filter(key => this._postSchema[key]?.required).length !== 
+            Object.keys(post).filter(key => this._postSchema[key]?.required).length) 
+            {
+            console.log('Mismatching number of keys!');
+            return false;
+        }
+
+        let errors = Object.keys(validateOver)
+            .filter(key => (!this._postSchema[key]?.(post[key]) && 
+                    this._postSchema[key]?.required) || 
+                    !this._postSchema.hasOwnProperty(key))
+            .map(key => new Error(`${key} is invalid!`));
+
+        if (errors.length > 0) {
+            errors.forEach(error => console.log(error.message));
+            return false;
+        }
+
+        return true;
+    }
+
+    validatePost(post = {}) {
+        return this._validateSchema(this._postSchema, post);
+    }
+
+    getPosts(skip = 0, top = 10, filterConfig = {}) {
+        if (!this._validateSchema(filterConfig, filterConfig)) {
+            console.log('Wrong filterConfig type!');
+            return [];
+        }
+
+        this.filterConfig = filterConfig;
+
+        let result = this._posts.filter((post) => {
+            for (let property in this.filterConfig) {
+                if (Array.isArray(post[property])) {
+                    for (let id in this.filterConfig[property]) {
+                        if (!post[property].find(x => x === this.filterConfig[property][id])) {
+                            return false;
+                        }
+                    }
+                } else if (post[property] !== this.filterConfig[property]) {
+                    return false;
+                }
+            }
+    
+            return true;
+        });
+    
+        return result.slice(skip, top);
+    }
+
+    getPost(id = 0) {
+        return this._posts.find(post => post.id === id);
+    }
+
+    addPost(post = {}) {
+        if (!this.validatePost(post) || this.getPost(post.id)) {
+            return false;
+        }
+
+        this._posts.push(post);
+        return true;
+    }
+
+    removePost(id = 0) {
+        const l = this._posts.length;
+        this._posts = this._posts.filter(post => post.id !== id);
+
+        return l !== this._posts.length;
+    }
+
+    editPost(id = 0, post = {}) {
+        let curPost = this.getPost(id);
+        if (!curPost || !this._validateSchema(post, post)) {
+            return false;
+        }
+
+        Object.keys(post)
+            .forEach(key => curPost[key] = post[key]);
+
+        return true;
+    }
+
+    addAll(posts = []) {
+        let failed = posts.filter(post => !this.addPost(post));
+        return failed;
+    }
+
+    clear() {
+        this._posts = []
+    }
+
+    constructor(posts = []) {
+        this._posts = posts.filter(post => this.validatePost(post));
+
+        this._postSchema.id.required = true;
+        this._postSchema.description.required = true;
+        this._postSchema.createdAt.required = true;
+        this._postSchema.author.required = true;
+        this._postSchema.hashTags.required = true;
+        this._postSchema.likes.required = true;
+    }
+}
+
+//Testing
+const twitter = new api([
+    {
+        id: '1',
+        description: 'Более 76 тыс. человек во всем мире уже излечились от заболевания, спровоцированного новым коронавирусом, тогда как количество смертей превысило 6,4 тыс.',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'Иванов Иван',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '2',
+        description: 'test2',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test2',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '3',
+        description: 'test3',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test3',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '4',
+        description: 'test4',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test4',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: []
+    },
+    {
+        id: '5',
+        description: 'test5',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test5',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '6',
+        description: 'test6',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test6',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '7',
+        description: 'test7',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test7',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '8',
+        description: 'test8',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test8',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '9',
+        description: 'test9',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test9',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '10',
+        description: 'test10',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test10',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '11',
+        description: 'test11',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test11',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '12',
+        description: 'test12',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test12',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '13',
+        description: 'test13',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test13',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '14',
+        description: 'test14',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test14',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '15',
+        description: 'test15',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test15',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+]);
+
+console.log(twitter.addAll([
+    {
+        id: '16',
+        description: 'test16',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test16',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '17',
+        description: 'test17',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test17',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '18',
+        description: 'test18',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test18',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '19',
+        description: 'test19',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test19',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '20',
+        description: 'test20',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test10',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '20',
+        description: 'test20',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test10',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+    {
+        id: '20',
+        description: 'test20',
+        createdAt: new Date('2020-03-17T23:00:00'),
+        author: 'test10',
+        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
+        hashTags: [
+            'coronavirus', 'virus'
+        ],
+        likes: [
+            'Иванов Иван'
+        ]
+    },
+]));
+
+console.log(twitter.getPosts(0, 10, {author: 'Иванов Иван', hashTags: ['coronavirus']}));
+console.log(twitter.getPost('1'));
+console.log(twitter.editPost('1', {description: 'edited description'}));
+console.log(twitter.editPost('1', {a: 'aaa'}));
+console.log(twitter.validatePost(twitter.getPost('1')));
+console.log(twitter.validatePost({id: '2'}));
+let addedPost = Object.assign({}, twitter.getPost('1'));
+addedPost.id = '21';
+console.log(twitter.addPost(addedPost));
+console.log(twitter.removePost('21'));
+console.log(twitter.getPosts());
+let postWithoutPhoto = {
+    id: '56',
+    description: 'Более 76 тыс. человек во всем мире уже излечились от заболевания, спровоцированного новым коронавирусом, тогда как количество смертей превысило 6,4 тыс.',
+    createdAt: new Date('2020-03-17T23:00:00'),
+    author: 'Иванов Иван',
+    hashTags: [
+        'coronavirus', 'virus'
+    ],
+    likes: [
+        'Иванов Иван'
+    ]
+}
+console.log(twitter.addPost(postWithoutPhoto));
+console.log(twitter.addPost(postWithoutPhoto));
