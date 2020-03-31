@@ -1,7 +1,7 @@
 class api {
     _posts = [];
 
-    _postSchema = {
+    static _postSchema = {
         id: (val) => typeof val === 'string',
         description: (val) => typeof val === 'string' && val.length < 200,
         createdAt: (val) => Object.prototype.toString.call(val) === '[object Date]',
@@ -11,18 +11,18 @@ class api {
         likes: (val) => Array.isArray(val),
     };
 
-    _validateSchema(validateOver = {}, post = {}) {
-        if (Object.keys(validateOver).filter(key => this._postSchema[key]?.required).length !== 
-            Object.keys(post).filter(key => this._postSchema[key]?.required).length) 
+    static _validateSchema(validateOver = {}, post = {}) {
+        if (Object.keys(validateOver).filter(key => api._postSchema[key]?.required).length !== 
+            Object.keys(post).filter(key => api._postSchema[key]?.required).length) 
             {
             console.log('Mismatching number of keys!');
             return false;
         }
 
         let errors = Object.keys(validateOver)
-            .filter(key => (!this._postSchema[key]?.(post[key]) && 
-                    this._postSchema[key]?.required) || 
-                    !this._postSchema.hasOwnProperty(key))
+            .filter(key => (!api._postSchema[key]?.(post[key]) && 
+                    api._postSchema[key]?.required) || 
+                    !api._postSchema.hasOwnProperty(key))
             .map(key => new Error(`${key} is invalid!`));
 
         if (errors.length > 0) {
@@ -33,12 +33,12 @@ class api {
         return true;
     }
 
-    validatePost(post = {}) {
-        return this._validateSchema(this._postSchema, post);
+    static validatePost(post = {}) {
+        return api._validateSchema(api._postSchema, post);
     }
 
     getPosts(skip = 0, top = 10, filterConfig = {}) {
-        if (!this._validateSchema(filterConfig, filterConfig)) {
+        if (!api._validateSchema(filterConfig, filterConfig)) {
             console.log('Wrong filterConfig type!');
             return [];
         }
@@ -61,7 +61,7 @@ class api {
             return true;
         });
     
-        return result.slice(skip, top);
+        return result.slice(skip, skip + top);
     }
 
     getPost(id = 0) {
@@ -69,7 +69,7 @@ class api {
     }
 
     addPost(post = {}) {
-        if (!this.validatePost(post) || this.getPost(post.id)) {
+        if (!api.validatePost(post) || this.getPost(post.id)) {
             return false;
         }
 
@@ -86,7 +86,7 @@ class api {
 
     editPost(id = 0, post = {}) {
         let curPost = this.getPost(id);
-        if (!curPost || !this._validateSchema(post, post)) {
+        if (!curPost || !api._validateSchema(post, post)) {
             return false;
         }
 
@@ -97,8 +97,7 @@ class api {
     }
 
     addAll(posts = []) {
-        let failed = posts.filter(post => !this.addPost(post));
-        return failed;
+        return posts.filter(post => !this.addPost(post));
     }
 
     clear() {
@@ -106,16 +105,16 @@ class api {
     }
 
     constructor(posts = []) {
-        this._posts = posts.filter(post => this.validatePost(post));
-
-        this._postSchema.id.required = true;
-        this._postSchema.description.required = true;
-        this._postSchema.createdAt.required = true;
-        this._postSchema.author.required = true;
-        this._postSchema.hashTags.required = true;
-        this._postSchema.likes.required = true;
+        this._posts = posts.filter(post => api.validatePost(post));
     }
 }
+
+api._postSchema.id.required = true;
+api._postSchema.description.required = true;
+api._postSchema.createdAt.required = true;
+api._postSchema.author.required = true;
+api._postSchema.hashTags.required = true;
+api._postSchema.likes.required = true;
 
 //Testing
 const twitter = new api([
@@ -410,8 +409,8 @@ console.log(twitter.getPosts(0, 10, {author: 'Иванов Иван', hashTags: 
 console.log(twitter.getPost('1'));
 console.log(twitter.editPost('1', {description: 'edited description'}));
 console.log(twitter.editPost('1', {a: 'aaa'}));
-console.log(twitter.validatePost(twitter.getPost('1')));
-console.log(twitter.validatePost({id: '2'}));
+console.log(api.validatePost(twitter.getPost('1')));
+console.log(api.validatePost({id: '2'}));
 let addedPost = Object.assign({}, twitter.getPost('1'));
 addedPost.id = '21';
 console.log(twitter.addPost(addedPost));
@@ -428,6 +427,6 @@ let postWithoutPhoto = {
     likes: [
         'Иванов Иван'
     ]
-}
+};
 console.log(twitter.addPost(postWithoutPhoto));
 console.log(twitter.addPost(postWithoutPhoto));
