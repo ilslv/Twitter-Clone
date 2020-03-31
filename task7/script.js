@@ -35,7 +35,7 @@ class api {
     }
 
     _getPostWithMaxId() {
-        return this._posts.reduce((prev, cur) => prev.id > cur.id ? prev : cur);
+        return this._posts.reduce((prev, cur) => Number.parseInt(prev.id) > Number.parseInt(cur.id) ? prev : cur);
     }
 
     static validatePost(post = {}) {
@@ -80,14 +80,14 @@ class api {
 
         let localPost = Object.assign({}, post);
         localPost.author = currentAuthor;
-        localPost.id = (Number.parseInt(this._getPostWithMaxId().id) + 1).toString;
-        localPost.createdAt = new  Date(Date.now());
+        localPost.id = (Number.parseInt(this._getPostWithMaxId().id) + 1).toString();
+        localPost.createdAt = new Date(Date.now());
 
         this._posts.push(localPost);
         return true;
     }
 
-    removePost(id = 0) {
+    removePost(id = '') {
         const l = this._posts.length;
         this._posts = this._posts.filter(post => post.id !== id);
 
@@ -368,7 +368,7 @@ console.log(twitter.editPost('1', {description: 'edited description'}));
 console.log(twitter.editPost('1', {a: 'aaa'}));
 console.log(api.validatePost(twitter.getPost('1')));
 console.log(api.validatePost({description: 'test', likes: 'test'}));
-console.log(twitter.removePost('21'));
+console.log(twitter.removePost('50'));
 console.log(twitter.removePost('3'));
 console.log(twitter.getPosts());
 let postWithoutPhoto = {
