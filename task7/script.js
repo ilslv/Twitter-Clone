@@ -1,14 +1,16 @@
+const currentAuthor = 'Ilya';
+
 class api {
     _posts = [];
 
     static _postSchema = {
-        id: (val) => typeof val === 'string',
-        description: (val) => typeof val === 'string' && val.length < 200,
-        createdAt: (val) => Object.prototype.toString.call(val) === '[object Date]',
-        author: (val) => typeof val === 'string' && val.length > 0,
-        photoLink: (val) => typeof val === 'string',
-        hashTags: (val) => Array.isArray(val),
-        likes: (val) => Array.isArray(val),
+        id: val => typeof val === 'string',
+        description: val => typeof val === 'string' && val.length < 200,
+        createdAt: val => Object.prototype.toString.call(val) === '[object Date]',
+        author: val => typeof val === 'string' && val.length > 0,
+        photoLink: val => typeof val === 'string',
+        hashTags: val => Array.isArray(val),
+        likes: val => Array.isArray(val),
     };
 
     static _validateSchema(validateOver = {}, post = {}) {
@@ -19,10 +21,9 @@ class api {
             return false;
         }
 
+        this.post = post;
         let errors = Object.keys(validateOver)
-            .filter(key => (!api._postSchema[key]?.(post[key]) && 
-                    api._postSchema[key]?.required) || 
-                    !api._postSchema.hasOwnProperty(key))
+            .filter(key => this.post.hasOwnProperty(key) && !api._postSchema[key]?.(this.post[key]))
             .map(key => new Error(`${key} is invalid!`));
 
         if (errors.length > 0) {
@@ -31,6 +32,10 @@ class api {
         }
 
         return true;
+    }
+
+    _getPostWithMaxId() {
+        return this._posts.reduce((prev, cur) => prev.id > cur.id ? prev : cur);
     }
 
     static validatePost(post = {}) {
@@ -61,7 +66,7 @@ class api {
             return true;
         });
     
-        return result.slice(skip, skip + top);
+        return result.sort((l, r) => r.createdAt - l.createdAt).slice(skip, skip + top);
     }
 
     getPost(id = 0) {
@@ -69,11 +74,16 @@ class api {
     }
 
     addPost(post = {}) {
-        if (!api.validatePost(post) || this.getPost(post.id)) {
+        if (!api.validatePost(post)) {
             return false;
         }
 
-        this._posts.push(post);
+        let localPost = Object.assign({}, post);
+        localPost.author = currentAuthor;
+        localPost.id = (Number.parseInt(this._getPostWithMaxId().id) + 1).toString;
+        localPost.createdAt = new  Date(Date.now());
+
+        this._posts.push(localPost);
         return true;
     }
 
@@ -109,12 +119,7 @@ class api {
     }
 }
 
-api._postSchema.id.required = true;
 api._postSchema.description.required = true;
-api._postSchema.createdAt.required = true;
-api._postSchema.author.required = true;
-api._postSchema.hashTags.required = true;
-api._postSchema.likes.required = true;
 
 //Testing
 const twitter = new api([
@@ -313,114 +318,61 @@ const twitter = new api([
 
 console.log(twitter.addAll([
     {
-        id: '16',
         description: 'test16',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test16',
         photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
         hashTags: [
             'coronavirus', 'virus'
         ],
-        likes: [
-            'Иванов Иван'
-        ]
     },
     {
-        id: '17',
         description: 'test17',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test17',
         photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
         hashTags: [
             'coronavirus', 'virus'
         ],
-        likes: [
-            'Иванов Иван'
-        ]
     },
     {
-        id: '18',
         description: 'test18',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test18',
         photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
         hashTags: [
             'coronavirus', 'virus'
         ],
-        likes: [
-            'Иванов Иван'
-        ]
     },
     {
-        id: '19',
         description: 'test19',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test19',
         photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
         hashTags: [
             'coronavirus', 'virus'
         ],
-        likes: [
-            'Иванов Иван'
-        ]
     },
     {
-        id: '20',
         description: 'test20',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test10',
         photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
         hashTags: [
             'coronavirus', 'virus'
         ],
-        likes: [
-            'Иванов Иван'
-        ]
     },
     {
-        id: '20',
-        description: 'test20',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test10',
+        description: 10,
         photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
         hashTags: [
             'coronavirus', 'virus'
         ],
-        likes: [
-            'Иванов Иван'
-        ]
-    },
-    {
-        id: '20',
-        description: 'test20',
-        createdAt: new Date('2020-03-17T23:00:00'),
-        author: 'test10',
-        photoLink: 'https://www.pressball.by/images/stories/2020/03/20200310231542.jpg',
-        hashTags: [
-            'coronavirus', 'virus'
-        ],
-        likes: [
-            'Иванов Иван'
-        ]
     },
 ]));
 
 console.log(twitter.getPosts(0, 10, {author: 'Иванов Иван', hashTags: ['coronavirus']}));
+console.log(twitter.getPosts(10, 5));
 console.log(twitter.getPost('1'));
 console.log(twitter.editPost('1', {description: 'edited description'}));
 console.log(twitter.editPost('1', {a: 'aaa'}));
 console.log(api.validatePost(twitter.getPost('1')));
-console.log(api.validatePost({id: '2'}));
-let addedPost = Object.assign({}, twitter.getPost('1'));
-addedPost.id = '21';
-console.log(twitter.addPost(addedPost));
+console.log(api.validatePost({description: 'test', likes: 'test'}));
 console.log(twitter.removePost('21'));
+console.log(twitter.removePost('3'));
 console.log(twitter.getPosts());
 let postWithoutPhoto = {
-    id: '56',
     description: 'Более 76 тыс. человек во всем мире уже излечились от заболевания, спровоцированного новым коронавирусом, тогда как количество смертей превысило 6,4 тыс.',
-    createdAt: new Date('2020-03-17T23:00:00'),
-    author: 'Иванов Иван',
     hashTags: [
         'coronavirus', 'virus'
     ],
@@ -429,4 +381,4 @@ let postWithoutPhoto = {
     ]
 };
 console.log(twitter.addPost(postWithoutPhoto));
-console.log(twitter.addPost(postWithoutPhoto));
+console.log(twitter.getPosts(0, 50));
