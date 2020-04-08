@@ -1,26 +1,19 @@
 package twitter;
 
-import javax.servlet.Filter;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-@WebServlet(value = "/image",
-            initParams =
-                    {
-                            @WebInitParam(name = "imageDir", value = "C:\\Users\\Ilya\\Pictures\\")
-                    })
+@WebServlet(value = "/image")
 @MultipartConfig
 public class Image extends HttpServlet {
     @Override
@@ -33,25 +26,39 @@ public class Image extends HttpServlet {
         String fileExtension = dotSeparated[dotSeparated.length - 1];
         String uniqueName = UUID.randomUUID().toString() + '.' + fileExtension;
 
-        File image = new File(getInitParameter("imageDir") + uniqueName);
+        String path = System.getProperty("catalina.home") + "\\webapps\\img\\";
+        File image = new File(path + uniqueName);
         Files.copy(fileContent, image.toPath());
 
         resp.getWriter().print(uniqueName);
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String fileName = req.getParameter("name");
-        File image = new File(getInitParameter("imageDir") + fileName);
+        String path = System.getProperty("catalina.home") + "\\webapps\\img\\";
 
-        if (!image.exists()) {
-            resp.getWriter().print("false");
-        } else {
-            resp.getWriter().print("<html>\n" +
-                    "    <body>\n" +
-                    "        <img src=\"file://" + getInitParameter("imageDir").replaceAll("\\\\", "/") + fileName + "\">\n" +
-                    "    </body>\n" +
-                    "</html>");
+        try {
+            FileInputStream fin = new FileInputStream(path + fileName);
+            ServletOutputStream output = resp.getOutputStream();
+
+            BufferedInputStream bin = new BufferedInputStream(fin);
+            BufferedOutputStream bout = new BufferedOutputStream(output);
+
+            resp.setContentType("image");
+
+            int ch = 0;
+            while ((ch = bin.read()) != -1) {
+                bout.write(ch);
+            }
+
+            fin.close();
+            output.flush();
+            output.close();
+            bin.close();
+            bout.close();
+        } catch (FileNotFoundException e) {
+            resp.getWriter().write("false");
         }
     }
 }
