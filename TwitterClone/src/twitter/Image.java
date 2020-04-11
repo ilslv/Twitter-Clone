@@ -47,7 +47,7 @@ public class Image extends HttpServlet {
 
             resp.setContentType("image");
 
-            int ch = 0;
+            int ch;
             while ((ch = bin.read()) != -1) {
                 bout.write(ch);
             }
