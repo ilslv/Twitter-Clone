@@ -98,12 +98,14 @@ class model {
         });    
 
         model._posts.push(localPost);
+        localStorage.setItem(localPost.id, JSON.stringify(localPost));
         return true;
       }
 
       static removePost(id = '') {
         const l = model._posts.length;
         model._posts = model._posts.filter((post) => post.id !== id);
+        localStorage.removeItem(id);
 
         return l !== model._posts.length;
       }
@@ -126,6 +128,17 @@ class model {
 
       static clear() {
         model._posts = [];
+      }
+
+      static restoreFromLocalStorage() {
+        for (let i = 0; i < localStorage.length; i++) {
+          let key = localStorage.key(i);
+          if (Number.parseInt(key)) {
+            let post = JSON.parse(localStorage.getItem(key));
+            post.createdAt = new Date(post.createdAt);
+            model._posts.push(post);
+          }
+        }
       }
 }
 model._postSchema.description.required = true;
