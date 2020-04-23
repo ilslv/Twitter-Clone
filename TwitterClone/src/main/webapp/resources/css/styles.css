@@ -37,7 +37,7 @@ button {
     font-size: 1em;
 }
 
-button:focus, input:focus, textarea:focus {
+button:focus, input:focus, textarea:focus, select:focus {
     outline:0;
 }
 
@@ -51,11 +51,11 @@ input, textarea, select{
     resize: none;
 }
 
-.up, .tag, .like, .add-post, .load-more {
+.up, .tag, .like, .add-post-button, .load-more {
     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -5px -5px 12px #FFFFFF;
 }
 
-.down, .post, .add-post-container, .like:active, .add-post:active, .load-more:active {
+.down, .post, .add-post-container, .like:active, .add-post-button:active, .load-more:active, .edit-popup, .likes-popup {
     box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.15), inset -5px -5px 16px rgba(255, 255, 255, 0.5);
 }
 
@@ -93,6 +93,7 @@ input, textarea, select{
 }
 
 .post {
+    position: relative;
     border-radius: 20px;
     padding: 15px 20px;
     margin: 10px 0px;
@@ -135,6 +136,14 @@ input, textarea, select{
 
 .like:hover {
     color: black;
+}
+
+.like-active {
+    color: red;
+}
+
+.like-active:hover {
+    color: red;
 }
 
 .tags {
@@ -237,6 +246,7 @@ header {
 
 .add-post-container > textarea {
     width: calc(100% - 20px);
+    background-color: transparent;
 }
 
 .add-post-container > div {
@@ -249,7 +259,7 @@ header {
     background-color: var(--bg);
 }
 
-.add-post {
+.add-post-button {
     background-color: var(--action);
     padding: 5px 10px;
     border-radius: 20px;
@@ -270,4 +280,42 @@ header {
     .login > .menu {
         display: inline;
     }
+}
+
+.edit-popup {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    border-radius: 20px;
+    background: var(--bg);
+    padding: 5px 10px;
+    right: 15px;
+}
+
+.edit-popup > div > button {
+    padding: 7px 15px;
+    background-color: transparent;
+}
+
+.edit-popup > div > button > i {
+    padding-right: 10px;
+}
+
+.likes-popup {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    border-radius: 20px;
+    background: var(--bg);
+    padding: 5px 10px;
+    right: 15px;
+    bottom: 70px;
+}
+
+.show {
+    display: inline;
+}
+
+#tags-select::-webkit-scrollbar {
+    display: none;
 }

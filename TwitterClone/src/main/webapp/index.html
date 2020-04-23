@@ -5,16 +5,18 @@
     <link rel="stylesheet" href="resources/css/styles.css">
     <script src="https://kit.fontawesome.com/b1d790f708.js" crossorigin="anonymous"></script>
 
-    <script src="resources/js/script.js"></script>
+    <script src="resources/js/model.js"></script>
+    <script src="resources/js/view.js"></script>
+    <script src="resources/js/controller.js"></script>
 
-    <title>Document</title>
+    <title>TwitterClone</title>
 </head>
 <body>
     <header>
         <div class="logo">twitter clone</div>
         <div class="login">
-            <b>Имя</b>
-            <button>Выйти</button>
+            <b>РРјСЏ</b>
+            <button>Р’С‹Р№С‚Рё</button>
             <button class="fas fa-bars menu"></button>
         </div>
     </header>
@@ -22,39 +24,49 @@
         <div class="filter">
             <div class="date">
                 <input class="down" type="date" value="2020-02-27">
-                <p>—</p>
+                <p>вЂ”</p>
                 <input class="down" type="date" value="2020-02-26">
             </div>
             <select class="down" id="author-select">
-                <option value="" selected disabled>Добавить автора</option>
-                <option value="">Без автора</option>
+                <option value="" selected disabled>Р”РѕР±Р°РІРёС‚СЊ Р°РІС‚РѕСЂР°</option>
+                <option value="">Р›СЋР±РѕР№ Р°РІС‚РѕСЂ</option>
             </select>
             <select class="down" id="tags-select" multiple>
-                <option value="" disabled selected>Добавить тэг</option>
+                <option value="" disabled selected>Р”РѕР±Р°РІРёС‚СЊ С‚СЌРі</option>
             </select>
             <footer>
                 twitter clone <br>
-                Соловьёв Илья, 2 курс 6 группа <br>
-                Версия 11.04.2020 <br>
+                РЎРѕР»РѕРІСЊС‘РІ РР»СЊСЏ, 2 РєСѓСЂСЃ 6 РіСЂСѓРїРїР° <br>
+                Р’РµСЂСЃРёСЏ 23.04.2020 <br>
             </footer>
         </div>
         <div class="feed" id="feed">
-            <div class="add-post-container">
-                <textarea placeholder="Что нового?" cols="30" rows="3" maxlength="140"></textarea>
+            <form class="add-post-container" name="add">
+                <textarea name="description" placeholder="Р§С‚Рѕ РЅРѕРІРѕРіРѕ?" cols="30" rows="3" maxlength="140"></textarea>
                 <div>
                     <button class="fas fa-file-image add-image"></button>
-                    <button class="add-post">Отправить</button>
+                    <input class="add-post-button" type="submit" value="РћС‚РїСЂР°РІРёС‚СЊ">
                 </div>
-            </div>
+            </form>
 
             <template id="post-template">
                 <div class="post">
+                    <div class="edit-popup">
+                        <div>
+                            <button><i class="fas fa-edit"></i>Edit</button>
+                        </div>
+                        <div>
+                            <button class="delete-post"><i class="fas fa-trash"></i>Delete</button>
+                        </div>
+                    </div>
                     <div class="top">
                         <b data-target="author"></b>
                         <p data-target="createdAt"></p>
+                        <button class="fas fa-ellipsis-h"></button>
                     </div>
                     <p data-target="description"></p>
-                    <div class="image" data-target="photoLink"></div>
+                    <div class="image" data-target="photoLink" style="display: none;"></div>
+                    <div data-target="likes" class="likes-popup"></div>
                     <div class="bottom">
                         <div class="tags" data-target="tags">
                         </div>
@@ -63,7 +75,7 @@
                 </div>
             </template>
 
-            <button class="load-more">Загрузить еще</button>
+            <button class="load-more">Р—Р°РіСЂСѓР·РёС‚СЊ РµС‰Рµ</button>
         </div>
     </div>
 </body>
