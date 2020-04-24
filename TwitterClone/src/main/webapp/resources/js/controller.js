@@ -22,21 +22,21 @@ class controller {
   }
 
   static loadMoreButton(event) {
-    model.getPosts(controller.postsOnScreen).forEach(post => {
+    model.getPosts(controller.postsOnScreen, 10, currentFilter).forEach(post => {
       view.displayPost(post);
     });
     controller.postsOnScreen += 10;
   }
 
   static likeMouseOver(event) {
-    let likesContainer = event.target.parentElement.previousSibling.previousSibling;
+    let likesContainer = event.target.parentElement.previousElementSibling;
     if (likesContainer.firstElementChild) {
       likesContainer.classList.add('show');
     }
   }
 
   static likeMouseLeave(event) {
-    let likesContainer = event.target.parentElement.previousSibling.previousSibling;
+    let likesContainer = event.target.parentElement.previousElementSibling;
     likesContainer.classList.remove('show');
   }
 
@@ -51,6 +51,32 @@ class controller {
     }
     localStorage.setItem(id, JSON.stringify(post));
     view.updatePost(id);
+  }
+
+  static onFilterChanged(event) {
+    let filterForm = view._filterForm;
+    let dateFrom = filterForm.firstElementChild.firstElementChild;
+    let dateTo = dateFrom.nextElementSibling.nextElementSibling;
+    let authorSelect = filterForm.firstElementChild.nextElementSibling;
+    let tagsSelect = authorSelect.nextElementSibling;
+
+    let filter = {};
+
+    filter.createdFromTo = []
+    filter.createdFromTo.push(new Date(dateFrom.value));
+    filter.createdFromTo.push(new Date(dateTo.value));
+
+    let author = authorSelect[authorSelect.selectedIndex].value;
+    if (author.length > 0) {
+      filter.author = author;
+    }
+
+    filter.hashTags = [...tagsSelect.options].filter((option) => option.selected && option.value.length > 0).map((option) => option.value);
+
+    currentFilter = filter;
+    view.removeAllPosts();
+    view.displayPosts(model.getPosts(0, 10, currentFilter));
+    controller.postsOnScreen = 10;
   }
 
   static displayAllAuthorsAndTags() {
@@ -84,11 +110,9 @@ window.onload = () => {
     view.updatePost(id);
   };
 
-  var addPostForm = document.forms["add"];
-  addPostForm.addEventListener('submit', controller.addPostButton);
-
-  var loadMoreButton = document.querySelector('[class="load-more"]');
-  loadMoreButton.addEventListener('click', controller.loadMoreButton);
+  view._addPostForm.addEventListener('submit', controller.addPostButton);
+  view._loadMoreButton.addEventListener('click', controller.loadMoreButton);
+  view._filterForm.addEventListener('change', controller.onFilterChanged);
 
   // Initial posts
   if (!localStorage.getItem('author')) {
@@ -110,8 +134,8 @@ window.onload = () => {
   } else {
     model.restoreFromLocalStorage();
   }
-  
 
-  view.displayPosts(model.getPosts());
+  view._userName.textContent = currentAuthor;
+  view.displayPosts(model.getPosts(0, 10, currentFilter));
   controller.displayAllAuthorsAndTags();
 };

@@ -59,7 +59,7 @@ class view {
 
       this.postView = document.importNode(view._postTemplate.content, true);
       Object.keys(post).forEach((key) => view._postViewSchema[key]?.(this.postView, post));
-      view._feedContainer.insertBefore(this.postView, view._feedContainer.firstElementChild.nextSibling);
+      view._feedContainer.insertBefore(this.postView, view._feedContainer.firstElementChild.nextElementSibling);
 
       view.displayAuthor(post.author);
       view.displayTags(post.hashTags);
@@ -111,6 +111,15 @@ class view {
       Object.keys(editedPost).forEach((key) => view._postViewSchema[key]?.(this.postView, editedPost));
       document.getElementById(id).replaceWith(this.postView);
     }
+
+    static removeAllPosts() {
+      let post = view._feedContainer.firstElementChild.nextElementSibling;
+      while (post.nextElementSibling != null) {
+        let delPost = post;
+        post = post.nextElementSibling;
+        delPost.remove();
+      }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -118,4 +127,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
   view._feedContainer = document.getElementById('feed');
   view._authorSelect = document.getElementById('author-select');
   view._tagsSelect = document.getElementById('tags-select');
+  view._filterForm = document.forms['filter'];
+  view._addPostForm = document.forms['add'];
+  view._loadMoreButton = document.querySelector('[class="load-more"]');
+  view._userName = document.getElementById('username');
 });

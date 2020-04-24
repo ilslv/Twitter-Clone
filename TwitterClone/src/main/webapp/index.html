@@ -15,13 +15,13 @@
     <header>
         <div class="logo">twitter clone</div>
         <div class="login">
-            <b>Имя</b>
+            <b id="username">Имя</b>
             <button>Выйти</button>
             <button class="fas fa-bars menu"></button>
         </div>
     </header>
     <div class="main">
-        <div class="filter">
+        <form class="filter" name="filter">
             <div class="date">
                 <input class="down" type="date" value="2020-02-25">
                 <p>—</p>
@@ -39,7 +39,7 @@
                 Соловьёв Илья, 2 курс 6 группа <br>
                 Версия 23.04.2020 <br>
             </footer>
-        </div>
+        </form>
         <div class="feed" id="feed">
             <form class="add-post-container" name="add">
                 <textarea name="description" placeholder="Что нового?" cols="30" rows="3" maxlength="140"></textarea>

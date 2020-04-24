@@ -1,4 +1,5 @@
-const currentAuthor = 'Ilya';
+let currentAuthor = 'Ilya';
+let currentFilter = {};
 
 class model {
       static _posts = [];
@@ -7,6 +8,7 @@ class model {
         id: (val) => typeof val === 'string',
         description: (val) => typeof val === 'string' && val.length < 200 && val.length > 0,
         createdAt: (val) => Object.prototype.toString.call(val) === '[object Date]',
+        createdFromTo: (val) =>  Array.isArray(val),
         author: (val) => typeof val === 'string' && val.length > 0,
         photoLink: (val) => typeof val === 'string',
         hashTags: (val) => Array.isArray(val),
@@ -51,10 +53,20 @@ class model {
 
         const result = model._posts.filter((post) => {
           for (const property in this.filterConfig) {
-            if (Array.isArray(post[property])) {
-              for (const id in this.filterConfig[property]) {
-                if (!post[property].find((x) => x === this.filterConfig[property][id])) {
+            if (Array.isArray(filterConfig[property])) {
+              if (property === 'createdFromTo') {
+                let from = new Date(filterConfig[property][0].toDateString());
+                let to = new Date(filterConfig[property][1].toDateString());
+                let created = new Date(post.createdAt.toDateString());
+
+                if (from > created || to < created) {
                   return false;
+                }
+              } else {
+                for (const id in this.filterConfig[property]) {
+                  if (!post[property].find((x) => x === this.filterConfig[property][id])) {
+                    return false;
+                  }
                 }
               }
             } else if (post[property] !== this.filterConfig[property]) {
@@ -139,6 +151,7 @@ class model {
             model._posts.push(post);
           }
         }
+        currentAuthor = localStorage.getItem('author');
       }
 }
 model._postSchema.description.required = true;
