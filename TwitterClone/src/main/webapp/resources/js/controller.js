@@ -15,9 +15,9 @@ class controller {
 
   static addPostButton(event) {
     var post = {};
-    post.description = event.target.elements["description"].value;
+    post.description = event.target.elements['description'].value;
     window.addPostInFront(post);
-    event.target.elements["description"].value = '';
+    event.target.elements['description'].value = '';
     event.preventDefault();
   }
 
@@ -111,6 +111,48 @@ class controller {
       view._addPostForm.classList.remove('hide');
     }
     event.preventDefault();
+  }
+
+  static editCanceled(event) {
+    view.updatePost(event.target.id);
+    event.preventDefault();
+  }
+
+  static editFormSubmit(event) {
+    let description = event.target.elements['description'].value;
+    let post = model.getPost(event.target.id);
+    post.description = description;
+    delete post.hashTags;
+
+    model.removePost(post.id);
+    model.addPost(post);
+
+    view.updatePost(event.target.id);
+    view.displayTags(model.getPost(post.id).hashTags);
+    event.preventDefault();
+  }
+
+  static editButtonClick(event) {
+    let postView = event.target.parentElement.parentElement.parentElement;
+
+    let editView = document.importNode(view._addPostForm, true);
+    editView.id = postView.id;
+    editView.querySelector('[class="add-post-button"]').value = 'Изменить';
+
+    let button = document.createElement('input');
+    button.type = 'reset';
+    button.value = 'Отменить';
+    button.classList.add('add-post-button');
+    button.style = 'background: var(--bg);';
+    editView.lastElementChild.appendChild(button);
+
+    editView.name = '';
+    editView.elements['description'].value = model.getPost(postView.id).description;
+
+    editView.addEventListener('reset', controller.editCanceled);
+    editView.addEventListener('submit', controller.editFormSubmit);
+
+    postView.replaceWith(editView);
   }
 
   static displayAllAuthorsAndTags() {

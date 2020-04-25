@@ -90,9 +90,15 @@ class model {
         }
 
         const localPost = { ...post };
-        localPost.author = currentAuthor;
-        localPost.id = (Number(model._getPostWithMaxId()?.id) + 1 || 1).toString();
-        localPost.createdAt = new Date(Date.now());
+        if (!localPost.hasOwnProperty('author')) {
+          localPost.author = currentAuthor;
+        }
+        if (!localPost.hasOwnProperty('id')) {
+          localPost.id = (Number(model._getPostWithMaxId()?.id) + 1 || 1).toString();
+        }
+        if (!localPost.hasOwnProperty('createdAt')) {
+          localPost.createdAt = new Date(Date.now());
+        }
         if (!localPost.hasOwnProperty('likes')) {
           localPost.likes = [];
         }

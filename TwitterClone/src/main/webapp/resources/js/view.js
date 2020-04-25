@@ -24,6 +24,7 @@ class view {
             var popup = editButton.parentElement.parentElement.firstElementChild;
             popup.addEventListener('mouseleave', controller.hideEditPopup);
             popup.querySelector('[class="delete-post"]').addEventListener('click', controller.removePostView);
+            popup.firstElementChild.firstElementChild.addEventListener('click', controller.editButtonClick)
         }
 
         postView.querySelector('[data-target="author"]').textContent = post.author;
