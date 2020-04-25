@@ -84,11 +84,13 @@ class controller {
   static loginLogout(event) {
     if (currentAuthor.length > 0) {
       currentAuthor = '';
+      localStorage.setItem('author', '');
       view._userName.textContent = '';
       view._loginLogoutButton.textContent = 'Войти';
       view.removeAllPosts();
       view.displayPosts(model.getPosts(0, 10, currentFilter));
-      localStorage.setItem('author', '');
+      controller.postsOnScreen = 10;
+      view._addPostForm.classList.add('hide');
     } else {
       view._loginForm.classList.add('show');
     }
@@ -106,6 +108,7 @@ class controller {
       controller.postsOnScreen = 10;
 
       event.target.classList.remove('show');
+      view._addPostForm.classList.remove('hide');
     }
     event.preventDefault();
   }
@@ -168,6 +171,10 @@ window.onload = () => {
   } else {
     currentAuthor = localStorage.getItem('author');
     model.restoreFromLocalStorage();
+  }
+
+  if(currentAuthor.length === 0) {
+    view._addPostForm.classList.add('hide');
   }
 
   view._userName.textContent = currentAuthor;
