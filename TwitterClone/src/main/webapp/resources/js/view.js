@@ -129,6 +129,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
   view._tagsSelect = document.getElementById('tags-select');
   view._filterForm = document.forms['filter'];
   view._addPostForm = document.forms['add'];
+  view._loginForm = document.forms['login'];
   view._loadMoreButton = document.querySelector('[class="load-more"]');
   view._userName = document.getElementById('username');
+  view._loginLogoutButton = document.getElementById('login-logout');
 });

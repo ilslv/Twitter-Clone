@@ -15,10 +15,16 @@
     <header>
         <div class="logo">twitter clone</div>
         <div class="login">
-            <b id="username">Имя</b>
-            <button>Выйти</button>
+            <b id="username"></b>
+            <button id="login-logout"></button>
             <button class="fas fa-bars menu"></button>
         </div>
+        <form class="login-popup" name="login">
+            <div>
+                <input type="text" placeholder="Логин" class="down">
+            </div>
+            <input type="submit" value="Войти" class="login-button">
+        </form>
     </header>
     <div class="main">
         <form class="filter" name="filter">

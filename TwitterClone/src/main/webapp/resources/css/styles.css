@@ -51,11 +51,11 @@ input, textarea, select{
     resize: none;
 }
 
-.up, .tag, .like, .add-post-button, .load-more {
+.up, .tag, .like, .add-post-button, .load-more, .login-button {
     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15), -5px -5px 12px #FFFFFF;
 }
 
-.down, .post, .add-post-container, .like:active, .add-post-button:active, .load-more:active, .edit-popup, .likes-popup {
+.down, .post, .add-post-container, .like:active, .add-post-button:active, .load-more:active, .edit-popup, .likes-popup, .login-popup, .login-button:active {
     box-shadow: inset 4px 4px 12px rgba(0, 0, 0, 0.15), inset -5px -5px 16px rgba(255, 255, 255, 0.5);
 }
 
@@ -312,10 +312,34 @@ header {
     bottom: 70px;
 }
 
-.show {
-    display: inline;
-}
-
 #tags-select::-webkit-scrollbar {
     display: none;
+}
+
+.login-popup {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    border-radius: 20px;
+    background: var(--bg);
+    padding: 5px 15px;
+    right: 15px;
+    top: 15px;
+}
+
+.login-popup > div > input {
+    padding: 5px 10px;
+    width: 200px;
+}
+
+.login-button {
+   float: right;
+   background-color: var(--action);
+   padding: 5px 10px;
+   border-radius: 20px;
+   margin-bottom: 10px;
+}
+
+.show {
+    display: inline;
 }

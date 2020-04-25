@@ -41,16 +41,18 @@ class controller {
   }
 
   static likeClick(event) {
-    let id = event.target.parentElement.parentElement.id;
+    if (currentAuthor.length > 0) {
+      let id = event.target.parentElement.parentElement.id;
     
-    let post = model.getPost(id);
-    if (post.likes.indexOf(currentAuthor) != -1) {
-      post.likes = post.likes.filter((username) => username != currentAuthor);
-    } else {
-      post.likes.push(currentAuthor);
+      let post = model.getPost(id);
+      if (post.likes.indexOf(currentAuthor) != -1) {
+        post.likes = post.likes.filter((username) => username != currentAuthor);
+      } else {
+        post.likes.push(currentAuthor);
+      }
+      localStorage.setItem(id, JSON.stringify(post));
+      view.updatePost(id);
     }
-    localStorage.setItem(id, JSON.stringify(post));
-    view.updatePost(id);
   }
 
   static onFilterChanged(event) {
@@ -77,6 +79,35 @@ class controller {
     view.removeAllPosts();
     view.displayPosts(model.getPosts(0, 10, currentFilter));
     controller.postsOnScreen = 10;
+  }
+
+  static loginLogout(event) {
+    if (currentAuthor.length > 0) {
+      currentAuthor = '';
+      view._userName.textContent = '';
+      view._loginLogoutButton.textContent = 'Войти';
+      view.removeAllPosts();
+      view.displayPosts(model.getPosts(0, 10, currentFilter));
+      localStorage.setItem('author', '');
+    } else {
+      view._loginForm.classList.add('show');
+    }
+  }
+
+  static loginFormSubmit(event) {
+    let username = event.target.firstElementChild.firstElementChild.value;
+    if (username.length > 0) {
+      view._loginLogoutButton.textContent = 'Выйти';
+      view._userName.textContent = username;
+      currentAuthor = username;
+      localStorage.setItem('author', username);
+      view.removeAllPosts();
+      view.displayPosts(model.getPosts(0, 10, currentFilter));
+      controller.postsOnScreen = 10;
+
+      event.target.classList.remove('show');
+    }
+    event.preventDefault();
   }
 
   static displayAllAuthorsAndTags() {
@@ -113,9 +144,12 @@ window.onload = () => {
   view._addPostForm.addEventListener('submit', controller.addPostButton);
   view._loadMoreButton.addEventListener('click', controller.loadMoreButton);
   view._filterForm.addEventListener('change', controller.onFilterChanged);
+  view._loginLogoutButton.addEventListener('click', controller.loginLogout);
+  view._loginForm.addEventListener('mouseleave', controller.hideEditPopup);
+  view._loginForm.addEventListener('submit', controller.loginFormSubmit);
 
   // Initial posts
-  if (!localStorage.getItem('author')) {
+  if (localStorage.getItem('author') === null) {
     for (let i = 1; i <= 25; i++) {
       let post = {};
       post.description = `test${i}`;
@@ -132,10 +166,13 @@ window.onload = () => {
     }
     localStorage.setItem('author', currentAuthor);
   } else {
+    currentAuthor = localStorage.getItem('author');
     model.restoreFromLocalStorage();
   }
 
   view._userName.textContent = currentAuthor;
+  view._loginLogoutButton.textContent = currentAuthor.length > 0 ? 'Выйти' : 'Войти';
+
   view.displayPosts(model.getPosts(0, 10, currentFilter));
   controller.displayAllAuthorsAndTags();
 };
