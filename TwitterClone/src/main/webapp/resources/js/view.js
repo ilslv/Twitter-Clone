@@ -16,15 +16,15 @@ class view {
       },
       author: (postView, post) => {
         if (post.author !== currentAuthor) {
-          postView.querySelector('[class="fas fa-ellipsis-h"]').style = 'display: none;'
+          postView.querySelector('[class="fas fa-ellipsis-h"]').style = 'display: none;';
         } else {
-            var editButton = postView.querySelector('[class="fas fa-ellipsis-h"]');
-            editButton.addEventListener('click', controller.showEditPopup);
+          const editButton = postView.querySelector('[class="fas fa-ellipsis-h"]');
+          editButton.addEventListener('click', controller.showEditPopup);
 
-            var popup = editButton.parentElement.parentElement.firstElementChild;
-            popup.addEventListener('mouseleave', controller.hideEditPopup);
-            popup.querySelector('[class="delete-post"]').addEventListener('click', controller.removePostView);
-            popup.firstElementChild.firstElementChild.addEventListener('click', controller.editButtonClick)
+          const popup = editButton.parentElement.parentElement.firstElementChild;
+          popup.addEventListener('mouseleave', controller.hideEditPopup);
+          popup.querySelector('[class="delete-post"]').addEventListener('click', controller.removePostView);
+          popup.firstElementChild.firstElementChild.addEventListener('click', controller.editButtonClick);
         }
 
         postView.querySelector('[data-target="author"]').textContent = post.author;
@@ -38,19 +38,20 @@ class view {
           likesContainer.appendChild(newLike);
         });
 
-        let likeButton = postView.querySelector('[class="far fa-heart like"]');
+        const likeButton = postView.querySelector('[class="far fa-heart like"]');
 
-        if (post.likes.indexOf(currentAuthor) != -1) {
+        if (post.likes.indexOf(currentAuthor) !== -1) {
           likeButton.classList.add('like-active');
         }
-        
+
         likeButton.addEventListener('mouseover', controller.likeMouseOver);
         likeButton.addEventListener('mouseleave', controller.likeMouseLeave);
-        likeButton.addEventListener('click', controller.likeClick)
+        likeButton.addEventListener('click', controller.likeClick);
       },
     }
 
     static _tags = [];
+
     static _authors = [];
 
     static displayPostInFront(post = {}) {
@@ -116,7 +117,7 @@ class view {
     static removeAllPosts() {
       let post = view._feedContainer.firstElementChild.nextElementSibling;
       while (post.nextElementSibling != null) {
-        let delPost = post;
+        const delPost = post;
         post = post.nextElementSibling;
         delPost.remove();
       }
@@ -128,9 +129,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
   view._feedContainer = document.getElementById('feed');
   view._authorSelect = document.getElementById('author-select');
   view._tagsSelect = document.getElementById('tags-select');
-  view._filterForm = document.forms['filter'];
-  view._addPostForm = document.forms['add'];
-  view._loginForm = document.forms['login'];
+  view._filterForm = document.forms.filter;
+  view._addPostForm = document.forms.add;
+  view._loginForm = document.forms.login;
   view._loadMoreButton = document.querySelector('[class="load-more"]');
   view._userName = document.getElementById('username');
   view._loginLogoutButton = document.getElementById('login-logout');

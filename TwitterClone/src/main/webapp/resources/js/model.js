@@ -1,5 +1,5 @@
 let currentAuthor = 'Ilya';
-let currentFilter = {};
+const currentFilter = {};
 
 class model {
       static _posts = [];
@@ -8,7 +8,7 @@ class model {
         id: (val) => typeof val === 'string',
         description: (val) => typeof val === 'string' && val.length < 200 && val.length > 0,
         createdAt: (val) => Object.prototype.toString.call(val) === '[object Date]',
-        createdFromTo: (val) =>  Array.isArray(val),
+        createdFromTo: (val) => Array.isArray(val),
         author: (val) => typeof val === 'string' && val.length > 0,
         photoLink: (val) => typeof val === 'string',
         hashTags: (val) => Array.isArray(val),
@@ -55,9 +55,9 @@ class model {
           for (const property in this.filterConfig) {
             if (Array.isArray(filterConfig[property])) {
               if (property === 'createdFromTo') {
-                let from = new Date(filterConfig[property][0].toDateString());
-                let to = new Date(filterConfig[property][1].toDateString());
-                let created = new Date(post.createdAt.toDateString());
+                const from = new Date(filterConfig[property][0].toDateString());
+                const to = new Date(filterConfig[property][1].toDateString());
+                const created = new Date(post.createdAt.toDateString());
 
                 if (from > created || to < created) {
                   return false;
@@ -106,14 +106,14 @@ class model {
           localPost.hashTags = [];
         }
 
-        let tagRegex = /#(\w)+/g;
-        let tags = localPost.description.match(tagRegex);
+        const tagRegex = /#(\w)+/g;
+        const tags = localPost.description.match(tagRegex);
         tags?.forEach((tag) => {
-          let tagStripped = tag.substr(1);
+          const tagStripped = tag.substr(1);
           if (localPost.hashTags.indexOf(tagStripped) === -1) {
             localPost.hashTags.push(tagStripped);
           }
-        });    
+        });
 
         model._posts.push(localPost);
         localStorage.setItem(localPost.id, JSON.stringify(localPost));
@@ -150,9 +150,9 @@ class model {
 
       static restoreFromLocalStorage() {
         for (let i = 0; i < localStorage.length; i++) {
-          let key = localStorage.key(i);
+          const key = localStorage.key(i);
           if (Number.parseInt(key)) {
-            let post = JSON.parse(localStorage.getItem(key));
+            const post = JSON.parse(localStorage.getItem(key));
             post.createdAt = new Date(post.createdAt);
             model._posts.push(post);
           }
