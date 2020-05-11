@@ -1,4 +1,4 @@
-package twitter;
+package twitter.filter;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;

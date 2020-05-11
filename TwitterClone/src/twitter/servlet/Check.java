@@ -1,4 +1,4 @@
-package twitter;
+package twitter.servlet;
 
 import com.google.gson.Gson;
 

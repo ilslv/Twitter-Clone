@@ -4,6 +4,7 @@
 out/
 node_modules/
 .vscode/
+TwitterClone/resources
 # Created by https://www.gitignore.io/api/java,maven,eclipse,jetbrains
 # Edit at https://www.gitignore.io/?templates=java,maven,eclipse,jetbrains
 
