@@ -89,34 +89,42 @@ public class Tweets extends HttpServlet {
             );
         } else {
             //Adding post
-            resp.getWriter().print(
-                    new BooleanResponse(Posts.add(requestJson))
-            );
+            Post post = Posts.add(requestJson);
+
+            if (post != null) {
+                resp.getWriter().print(
+                        ((new GsonBuilder())
+                                .setPrettyPrinting()
+                                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                .create()
+                        ).toJson(post)
+                );
+            } else {
+                resp.sendError(400);
+            }
         }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
-        int id;
+        int id = 0;
 
         try {
-            if (uriList.size() > 3 && uriList.get(3).equals("id")) {
-                id = Integer.parseInt(uriList.get(3));
-            } else if (req.getParameter("id") != null) {
+            if (req.getParameter("id") != null) {
                 id = Integer.parseInt(req.getParameter("id"));
             } else {
                 throw new NumberFormatException();
             }
         } catch (NumberFormatException e) {
-            resp.getWriter().print(
-                    new BooleanResponse(false)
-            );
-            return;
+            resp.sendError(400);
         }
 
-        resp.getWriter().print(
-                new BooleanResponse(Posts.remove(id))
-        );
+        if (Posts.remove(id)) {
+            resp.getWriter().print(
+                    new BooleanResponse(true)
+            );
+        } else {
+            resp.sendError(404);
+        }
     }
 }

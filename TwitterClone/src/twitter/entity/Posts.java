@@ -7,12 +7,11 @@ import com.google.gson.JsonSyntaxException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class Posts {
     protected static Connection dbConnection;
 
-    public static boolean add(String postJson) {
+    public static Post add(String postJson) {
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
                 .create();
@@ -20,9 +19,14 @@ public class Posts {
 
         try {
             newPost = gson.fromJson(postJson, Post.class);
+            if (newPost == null) {
+                return null;
+            }
         } catch (JsonSyntaxException e) {
-            return false;
+            return null;
         }
+
+        newPost.createdAt = new java.util.Date();
 
         try {
             dbConnection.prepareStatement("start transaction;").execute();
@@ -61,11 +65,12 @@ public class Posts {
             });
 
             dbConnection.prepareStatement("commit;").execute();
-        } catch (SQLException | NullPointerException e) {
-            return false;
-        }
 
-        return true;
+            return get(postId);
+
+        } catch (SQLException | NullPointerException e) {
+            return null;
+        }
     }
 
     public static Post get(int id) {
@@ -118,18 +123,22 @@ public class Posts {
 
     public static boolean remove(int id) {
         try {
-            PreparedStatement deletePost = dbConnection.prepareStatement(
-                    "start transaction;" +
-                            "set @id = ?;" +
-                            "delete from post_has_tag where post_id = @id;" +
-                            "delete from post_was_liked where post_id = @id;" +
-                            "delete from post where post_id = @id;" +
-                            "commit;"
-            );
+            dbConnection.prepareStatement("start transaction;").execute();
 
+            PreparedStatement deletePost = dbConnection.prepareStatement("set @id = ?;");
             deletePost.setInt(1, id);
-
             deletePost.execute();
+
+            int affectedRows = 0;
+            affectedRows += dbConnection.prepareStatement("delete from post_has_tag where post_id = @id;").executeUpdate();
+            affectedRows += dbConnection.prepareStatement("delete from post_was_liked where post_id = @id;").executeUpdate();
+            affectedRows += dbConnection.prepareStatement("delete from post where post_id = @id;").executeUpdate();
+
+            dbConnection.prepareStatement("commit;").execute();
+
+            if (affectedRows == 0) {
+                return false;
+            }
         } catch (SQLException e) {
             return false;
         }
@@ -146,7 +155,7 @@ public class Posts {
 
         PostFilter filter = new PostFilter();
 
-        if (!filterJson.equals("")){
+        if (!filterJson.equals("")) {
             try {
                 filter = gson.fromJson(filterJson, PostFilter.class);
             } catch (JsonSyntaxException e) {
@@ -211,7 +220,7 @@ public class Posts {
                 filterQuery.setDate(offset + 1, new Date(filter.createdFrom.getTime()));
                 offset++;
             }
-            if (filter.createdTo != null){
+            if (filter.createdTo != null) {
                 filterQuery.setDate(offset + 1, new Date(filter.createdTo.getTime()));
                 offset++;
             }
