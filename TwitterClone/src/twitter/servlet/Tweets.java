@@ -37,25 +37,16 @@ public class Tweets extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
-        try {
-            switch (uriList.get(2)) {
-                case ("id"):
-                    getPost(uriList.get(3), resp);
-                    break;
-                //Future pages will be handled here
-                default:
-                    resp.sendRedirect("/");
-            }
-        } catch (IndexOutOfBoundsException e) {
-            String id = req.getParameter("id");
-            if (id != null) {
-                getPost(id, resp);
-            } else {
-                req.getRequestDispatcher("/").forward(req, resp);
-            }
-        }
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        List<Post> filteredPosts = Posts.filter(requestJson);
+        resp.getWriter().print(
+                ((new GsonBuilder())
+                        .setPrettyPrinting()
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                        .create()
+                ).toJson(filteredPosts)
+        );
     }
 
     @Override

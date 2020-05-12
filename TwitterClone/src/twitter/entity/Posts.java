@@ -6,7 +6,6 @@ import com.google.gson.JsonSyntaxException;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -144,16 +143,43 @@ public class Posts {
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
                 .create();
-        PostFilter filter;
 
-        try {
-            filter = gson.fromJson(filterJson, PostFilter.class);
-        } catch (JsonSyntaxException e) {
-            return result;
+        PostFilter filter = new PostFilter();
+
+        if (!filterJson.equals("")){
+            try {
+                filter = gson.fromJson(filterJson, PostFilter.class);
+            } catch (JsonSyntaxException e) {
+                return result;
+            }
         }
 
         try {
             String questions = ",?".repeat(filter.hashTags.size());
+
+            String dateQuery = "";
+            if (filter.createdFrom != null || filter.createdTo != null) {
+                dateQuery = "where ";
+                if (filter.createdFrom != null) {
+                    dateQuery += "date(created_at) >= ? ";
+                }
+                if (filter.createdFrom != null && filter.createdTo != null) {
+                    dateQuery += " and ";
+                }
+                if (filter.createdTo != null) {
+                    dateQuery += "date(created_at) <= ? ";
+                }
+            }
+
+            String authorQuery = "";
+            if (filter.author != null) {
+                if (!dateQuery.equals("")) {
+                    authorQuery += " and ";
+                } else {
+                    authorQuery += "where ";
+                }
+                authorQuery += "u.name = ? ";
+            }
 
             PreparedStatement filterQuery = dbConnection.prepareStatement(
                     "select \n" +
@@ -165,27 +191,37 @@ public class Posts {
                             "        count(*) tags_count\n" +
                             "    from post_has_tag pht\n" +
                             "    join tag t on pht.tag_id = t.tag_id\n" +
-                            "    where name in (''"+ questions + ")\n" +
+                            "    where name in (''" + questions + ")\n" +
                             "    group by post_id) tc\n" +
                             "right join post p on p.post_id = tc.post_id\n" +
                             "join user u on p.user_id = u.user_id\n" +
-                            "where (created_at between ? and ?) & u.name = ?\n" +
+                            dateQuery +
+                            authorQuery +
                             "having (tags_count = ?)\n" +
                             "order by created_at desc\n" +
                             "limit ?, ?"
             );
 
-            int tags = filter.hashTags.size();
-            for (int i = 0; i < tags; i++) {
+            int offset = filter.hashTags.size();
+            for (int i = 0; i < offset; i++) {
                 filterQuery.setString(i + 1, filter.hashTags.get(i));
             }
 
-            filterQuery.setTimestamp(tags + 1, new Timestamp(filter.createdFrom.getTime()));
-            filterQuery.setTimestamp(tags + 2, new Timestamp(filter.createdTo.getTime()));
-            filterQuery.setString(tags + 3, filter.author);
-            filterQuery.setInt(tags + 4, filter.hashTags.size());
-            filterQuery.setInt(tags + 5, filter.skip);
-            filterQuery.setInt(tags + 6, filter.top);
+            if (filter.createdFrom != null) {
+                filterQuery.setDate(offset + 1, new Date(filter.createdFrom.getTime()));
+                offset++;
+            }
+            if (filter.createdTo != null){
+                filterQuery.setDate(offset + 1, new Date(filter.createdTo.getTime()));
+                offset++;
+            }
+            if (filter.author != null) {
+                filterQuery.setString(offset + 1, filter.author);
+                offset++;
+            }
+            filterQuery.setInt(offset + 1, filter.hashTags.size());
+            filterQuery.setInt(offset + 2, filter.skip);
+            filterQuery.setInt(offset + 3, filter.top);
 
             ResultSet filterQueryResult = filterQuery.executeQuery();
 
