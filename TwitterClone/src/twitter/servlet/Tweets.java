@@ -38,15 +38,40 @@ public class Tweets extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        List<Post> filteredPosts = Posts.filter(requestJson);
-        resp.getWriter().print(
-                ((new GsonBuilder())
-                        .setPrettyPrinting()
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                        .create()
-                ).toJson(filteredPosts)
-        );
+        List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
+
+        if (uriList.size() > 2) {
+            //Get post by id
+            try {
+                int id = Integer.parseInt(uriList.get(2));
+                Post post = Posts.get(id);
+
+                if (post == null) {
+                    throw new NumberFormatException();
+                }
+
+                resp.getWriter().print(
+                        ((new GsonBuilder())
+                                .setPrettyPrinting()
+                                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                .create()
+                        ).toJson(post)
+                );
+            } catch (NumberFormatException e) {
+                resp.sendError(404);
+            }
+        } else {
+            //Filtration
+            String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            List<Post> filteredPosts = Posts.filter(requestJson);
+            resp.getWriter().print(
+                    ((new GsonBuilder())
+                            .setPrettyPrinting()
+                            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                            .create()
+                    ).toJson(filteredPosts)
+            );
+        }
     }
 
     @Override
