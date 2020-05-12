@@ -1,12 +1,10 @@
 package twitter.servlet;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import twitter.entity.BooleanResponse;
 import twitter.entity.Post;
 import twitter.entity.Posts;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,23 +16,6 @@ import java.util.stream.Collectors;
 
 @WebServlet("/tweets/*")
 public class Tweets extends HttpServlet {
-    private void getPost(String id, HttpServletResponse resp) throws IOException {
-        int postId;
-        try {
-            postId = Integer.parseInt(id);
-        } catch (NumberFormatException e) {
-            return;
-        }
-
-        Post post = Posts.get(postId);
-        resp.getWriter().print(
-                ((new GsonBuilder())
-                        .setPrettyPrinting()
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                        .create()
-                ).toJson(post)
-        );
-    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -77,18 +58,36 @@ public class Tweets extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
-        String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        if (uriList.size() > 2 && uriList.get(2).equals("search")) {
-            List<Post> filteredPosts = Posts.filter(requestJson);
-            resp.getWriter().print(
-                    ((new GsonBuilder())
-                            .setPrettyPrinting()
-                            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                            .create()
-                    ).toJson(filteredPosts)
-            );
+
+        if (uriList.size() > 2 && uriList.get(2).equals("like")) {
+            //Adding like to a post
+            int id;
+            String author;
+
+            try {
+                id = Integer.parseInt(req.getParameter("id"));
+                author = req.getParameter("author");
+
+                if (author == null) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException e) {
+                resp.sendError(400);
+                return;
+            }
+
+            if (Posts.addLike(id, author)) {
+                resp.getWriter().print(
+                        new BooleanResponse(true)
+                );
+            } else {
+                resp.sendError(400);
+            }
+
         } else {
             //Adding post
+            String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
             Post post = Posts.add(requestJson);
 
             if (post != null) {
@@ -107,16 +106,13 @@ public class Tweets extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        int id = 0;
+        int id;
 
         try {
-            if (req.getParameter("id") != null) {
-                id = Integer.parseInt(req.getParameter("id"));
-            } else {
-                throw new NumberFormatException();
-            }
+            id = Integer.parseInt(req.getParameter("id"));
         } catch (NumberFormatException e) {
             resp.sendError(400);
+            return;
         }
 
         if (Posts.remove(id)) {

@@ -244,4 +244,47 @@ public class Posts {
 
         return result;
     }
+
+    public static boolean addLike(int postId, String author) {
+        try {
+            PreparedStatement selectPost = dbConnection.prepareStatement(
+                    "select *\n" +
+                            "    from post_was_liked pwl\n" +
+                            "    join user u on pwl.user_id = u.user_id\n" +
+                            "    where name = ? and post_id = ?"
+            );
+            selectPost.setString(1, author);
+            selectPost.setInt(2, postId);
+
+            ResultSet selectPostResult = selectPost.executeQuery();
+            if (selectPostResult.next()) {
+                //Remove like
+                int userId = selectPostResult.getInt(2);
+
+                PreparedStatement deletePost = dbConnection.prepareStatement(
+                        "delete from post_was_liked where post_id = ? and user_id = ?"
+                );
+                deletePost.setInt(1, postId);
+                deletePost.setInt(2, userId);
+
+                deletePost.execute();
+            } else {
+                //Add like
+                PreparedStatement addLike = dbConnection.prepareStatement(
+                        "insert into post_was_liked (post_id, user_id)\n" +
+                                "select ?, user_id\n" +
+                                "from user\n" +
+                                "where name = ?"
+                );
+                addLike.setInt(1, postId);
+                addLike.setString(2, author);
+
+                addLike.execute();
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+
+        return true;
+    }
 }
