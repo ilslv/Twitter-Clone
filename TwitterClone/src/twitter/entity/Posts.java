@@ -287,4 +287,23 @@ public class Posts {
 
         return true;
     }
+
+    public static boolean findUser(String username) {
+        try {
+            PreparedStatement selectUser = dbConnection.prepareStatement(
+                    "select *\n" +
+                            "from user\n" +
+                            "where name = ?"
+            );
+            selectUser.setString(1, username);
+
+            ResultSet selectUserResult = selectUser.executeQuery();
+
+            return selectUserResult.next();
+
+        } catch (SQLException e) {
+            return false;
+        }
+
+    }
 }

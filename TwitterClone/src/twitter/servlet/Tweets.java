@@ -20,11 +20,18 @@ public class Tweets extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
-
-        if (uriList.size() > 2) {
+        if (uriList.size() > 2 && uriList.get(2).equals("login")) {
+            if (Posts.findUser(req.getParameter("username"))) {
+                resp.getWriter().print(
+                        new BooleanResponse(true)
+                );
+            } else {
+                resp.sendError(404);
+            }
+        } else if (req.getParameter("id") != null) {
             //Get post by id
             try {
-                int id = Integer.parseInt(uriList.get(2));
+                int id = Integer.parseInt(req.getParameter("id"));
                 Post post = Posts.get(id);
 
                 if (post == null) {
