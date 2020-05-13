@@ -5,6 +5,7 @@ import twitter.entity.BooleanResponse;
 import twitter.entity.Post;
 import twitter.entity.Posts;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +21,9 @@ public class Tweets extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
+
         if (uriList.size() > 2 && uriList.get(2).equals("login")) {
+            //Check if user exists
             if (Posts.findUser(req.getParameter("username"))) {
                 resp.getWriter().print(
                         new BooleanResponse(true)
@@ -128,6 +131,25 @@ public class Tweets extends HttpServlet {
             );
         } else {
             resp.sendError(404);
+        }
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
+        try {
+            int postId = Posts.edit(requestJson);
+
+            resp.getWriter().print(
+                    ((new GsonBuilder())
+                            .setPrettyPrinting()
+                            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                            .create()
+                    ).toJson(Posts.get(postId))
+            );
+        } catch (IllegalArgumentException e) {
+            resp.sendError(400);
         }
     }
 }

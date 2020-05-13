@@ -92,7 +92,7 @@ public class Posts {
                 return null;
             }
 
-            post.id = String.valueOf(id);
+            post.id = id;
             post.description = postQueryResult.getString(3);
             post.createdAt = postQueryResult.getTimestamp(4);
             post.photoLink = postQueryResult.getString(5);
@@ -305,5 +305,67 @@ public class Posts {
             return false;
         }
 
+    }
+
+    public static int edit(String postJson) throws IllegalArgumentException {
+        Gson gson = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                .create();
+        Post newPost;
+
+        try {
+            newPost = gson.fromJson(postJson, Post.class);
+            if (newPost == null || newPost.id == 0) {
+                throw new IllegalArgumentException();
+            }
+        } catch (JsonSyntaxException e) {
+            throw new IllegalArgumentException();
+        }
+
+        try {
+            dbConnection.prepareStatement("start transaction;").execute();
+
+            PreparedStatement idVar = dbConnection.prepareStatement("set @id = ?;");
+            idVar.setInt(1, newPost.id);
+            idVar.execute();
+
+            PreparedStatement updatePost = dbConnection.prepareStatement(
+                    "update post\n" +
+                            "set\n" +
+                            "    description = ?,\n" +
+                            "    photo_link = ?\n" +
+                            "where post_id = @id"
+            );
+
+            updatePost.setString(1, newPost.description);
+            updatePost.setString(2, newPost.photoLink);
+
+            if (updatePost.executeUpdate() == 0) {
+                throw new IllegalArgumentException();
+            }
+
+            dbConnection.prepareStatement("delete from post_has_tag where post_id = @id;").executeUpdate();
+
+            newPost.hashTags.forEach(tag -> {
+                try {
+                    PreparedStatement selectTag = dbConnection.prepareStatement(
+                            "set @tag_name = ?;" +
+                                    "insert ignore into tag (name) values (@tag_name);" +
+                                    "set @tag_id = (select tag_id from tag where name = @tag_name);" +
+                                    "insert into post_has_tag (post_id, tag_id) values (@id, @tag_id);"
+                    );
+                    selectTag.setString(1, tag);
+                    selectTag.execute();
+                } catch (SQLException e) {
+                    throw new IllegalArgumentException();
+                }
+            });
+
+            dbConnection.prepareStatement("commit;").execute();
+
+            return newPost.id;
+        } catch (SQLException e) {
+            throw new IllegalArgumentException();
+        }
     }
 }
