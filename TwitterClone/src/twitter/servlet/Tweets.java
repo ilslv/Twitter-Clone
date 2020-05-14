@@ -1,5 +1,6 @@
 package twitter.servlet;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import twitter.entity.BooleanResponse;
 import twitter.entity.Post;
@@ -22,14 +23,40 @@ public class Tweets extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
 
-        if (uriList.size() > 2 && uriList.get(2).equals("login")) {
-            //Check if user exists
-            if (Posts.findUser(req.getParameter("username"))) {
-                resp.getWriter().print(
-                        new BooleanResponse(true)
-                );
-            } else {
-                resp.sendError(404);
+        if (uriList.size() > 2) {
+            switch (uriList.get(2)) {
+                case "login":
+                    //Check if user exists
+                    if (Posts.findUser(req.getParameter("username"))) {
+                        resp.getWriter().print(
+                                new BooleanResponse(true)
+                        );
+                    } else {
+                        resp.sendError(404);
+                    }
+                    return;
+                case "authors":
+                    List<String> authors = Posts.getAllAuthors();
+
+                    resp.getWriter().print(
+                            ((new GsonBuilder())
+                                    .setPrettyPrinting()
+                                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                    .create()
+                            ).toJson(authors)
+                    );
+
+                    return;
+                case "tags":
+                    List<String> tags = Posts.getAllTags();
+
+                    resp.getWriter().print(
+                            ((new GsonBuilder())
+                                    .setPrettyPrinting()
+                                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                    .create()
+                            ).toJson(tags)
+                    );
             }
         } else if (req.getParameter("id") != null) {
             //Get post by id
@@ -51,17 +78,6 @@ public class Tweets extends HttpServlet {
             } catch (NumberFormatException e) {
                 resp.sendError(404);
             }
-        } else {
-            //Filtration
-            String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-            List<Post> filteredPosts = Posts.filter(requestJson);
-            resp.getWriter().print(
-                    ((new GsonBuilder())
-                            .setPrettyPrinting()
-                            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                            .create()
-                    ).toJson(filteredPosts)
-            );
         }
     }
 
@@ -69,29 +85,42 @@ public class Tweets extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
 
-        if (uriList.size() > 2 && uriList.get(2).equals("like")) {
-            //Adding like to a post
-            int id;
-            String author;
+        if (uriList.size() > 2) {
+            if (uriList.get(2).equals("like")) {
+                //Adding like to a post
+                int id;
+                String author;
 
-            try {
-                id = Integer.parseInt(req.getParameter("id"));
-                author = req.getParameter("author");
+                try {
+                    id = Integer.parseInt(req.getParameter("id"));
+                    author = req.getParameter("author");
 
-                if (author == null) {
-                    throw new NumberFormatException();
+                    if (author == null) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    resp.sendError(400);
+                    return;
                 }
-            } catch (NumberFormatException e) {
-                resp.sendError(400);
-                return;
-            }
 
-            if (Posts.addLike(id, author)) {
+                if (Posts.addLike(id, author)) {
+                    resp.getWriter().print(
+                            new BooleanResponse(true)
+                    );
+                } else {
+                    resp.sendError(400);
+                }
+            } else if (uriList.get(2).equals("search")) {
+                //Filtration
+                String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+                List<Post> filteredPosts = Posts.filter(requestJson);
                 resp.getWriter().print(
-                        new BooleanResponse(true)
+                        ((new GsonBuilder())
+                                .setPrettyPrinting()
+                                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                .create()
+                        ).toJson(filteredPosts)
                 );
-            } else {
-                resp.sendError(400);
             }
 
         } else {

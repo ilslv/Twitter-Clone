@@ -19,7 +19,9 @@ public class Posts {
 
         try {
             newPost = gson.fromJson(postJson, Post.class);
-            if (newPost == null) {
+            if (newPost == null ||
+                newPost.description == null ||
+                newPost.description.length() == 0) {
                 return null;
             }
         } catch (JsonSyntaxException e) {
@@ -329,16 +331,20 @@ public class Posts {
             idVar.setInt(1, newPost.id);
             idVar.execute();
 
+            String photoLinkUpdate = (newPost.photoLink == null ? "" : ", photo_link = ?\n");
+
             PreparedStatement updatePost = dbConnection.prepareStatement(
                     "update post\n" +
                             "set\n" +
-                            "    description = ?,\n" +
-                            "    photo_link = ?\n" +
+                            "    description = ?" +
+                            photoLinkUpdate +
                             "where post_id = @id"
             );
 
             updatePost.setString(1, newPost.description);
-            updatePost.setString(2, newPost.photoLink);
+            if (newPost.photoLink != null) {
+                updatePost.setString(2, newPost.photoLink);
+            }
 
             if (updatePost.executeUpdate() == 0) {
                 throw new IllegalArgumentException();
@@ -367,5 +373,49 @@ public class Posts {
         } catch (SQLException e) {
             throw new IllegalArgumentException();
         }
+    }
+
+    public static List<String> getAllAuthors() {
+        List<String> result = new ArrayList<>();
+
+        try {
+            PreparedStatement selectAllAuthors = dbConnection.prepareStatement(
+                    "select name\n" +
+                            "from user"
+            );
+
+            ResultSet selectResult = selectAllAuthors.executeQuery();
+
+            while (selectResult.next()) {
+                result.add(selectResult.getString(1));
+            }
+
+        } catch (SQLException e) {
+            return result;
+        }
+
+        return result;
+    }
+
+    public static List<String> getAllTags() {
+        List<String> result = new ArrayList<>();
+
+        try {
+            PreparedStatement selectAllAuthors = dbConnection.prepareStatement(
+                    "select name\n" +
+                            "from tag"
+            );
+
+            ResultSet selectResult = selectAllAuthors.executeQuery();
+
+            while (selectResult.next()) {
+                result.add(selectResult.getString(1));
+            }
+
+        } catch (SQLException e) {
+            return result;
+        }
+
+        return result;
     }
 }

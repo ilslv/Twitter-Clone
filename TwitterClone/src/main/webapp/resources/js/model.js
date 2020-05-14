@@ -1,163 +1,118 @@
-let currentAuthor = 'Ilya';
-const currentFilter = {};
+let currentAuthor = '';
+let currentFilter = {};
 
 class model {
-      static _posts = [];
+  static _fillData(post = {}) {
+    const localPost = { ...post };
+    localPost.author = currentAuthor;
+    localPost.createdAt = new Date(Date.now());
+    localPost.hashTags = [];
 
-      static _postSchema = {
-        id: (val) => typeof val === 'string',
-        description: (val) => typeof val === 'string' && val.length < 200 && val.length > 0,
-        createdAt: (val) => Object.prototype.toString.call(val) === '[object Date]',
-        createdFromTo: (val) => Array.isArray(val),
-        author: (val) => typeof val === 'string' && val.length > 0,
-        photoLink: (val) => typeof val === 'string',
-        hashTags: (val) => Array.isArray(val),
-        likes: (val) => Array.isArray(val),
-      };
-
-      static _validateSchema(validateOver = {}, post = {}) {
-        if (Object.keys(validateOver).filter((key) => model._postSchema[key]?.required).length
-              !== Object.keys(post).filter((key) => model._postSchema[key]?.required).length) {
-          console.log('Mismatching number of keys!');
-          return false;
-        }
-
-        this.post = post;
-        const errors = Object.keys(validateOver)
-          .filter((key) => this.post.hasOwnProperty(key) && !model._postSchema[key]?.(this.post[key]))
-          .map((key) => new Error(`${key} is invalid!`));
-
-        if (errors.length > 0) {
-          errors.forEach((error) => console.log(error.message));
-          return false;
-        }
-
-        return true;
+    const tagRegex = /#(\w)+/g;
+    const tags = localPost.description.match(tagRegex);
+    tags?.forEach((tag) => {
+      const tagStripped = tag.substr(1);
+      if (localPost.hashTags.indexOf(tagStripped) === -1) {
+        localPost.hashTags.push(tagStripped);
       }
+    });
+    return localPost;
+  }
 
-      static _getPostWithMaxId() {
-        return model._posts.length === 0 ? null : model._posts.reduce((prev, cur) => (Number.parseInt(prev.id) > Number.parseInt(cur.id) ? prev : cur));
-      }
+  static async getPosts(
+    skip = 0, top = controller.postsOnSinglePage, filterConfig = {},
+  ) {
+    const reqFilter = { ...filterConfig };
+    reqFilter.skip = skip;
+    reqFilter.top = top;
 
-      static validatePost(post = {}) {
-        return model._validateSchema(model._postSchema, post);
-      }
+    const response = await fetch('/tweets/search', {
+      method: 'POST',
+      body: JSON.stringify(reqFilter),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      static getPosts(skip = 0, top = 10, filterConfig = {}) {
-        if (!model._validateSchema(filterConfig, filterConfig)) {
-          console.log('Wrong filterConfig type!');
-          return [];
-        }
+    return response.json();
+  }
 
-        this.filterConfig = filterConfig;
+  static async getPost(id = 0) {
+    const response = await fetch(`/tweets?id=${id}`);
+    return response.json();
+  }
 
-        const result = model._posts.filter((post) => {
-          for (const property in this.filterConfig) {
-            if (Array.isArray(filterConfig[property])) {
-              if (property === 'createdFromTo') {
-                const from = new Date(filterConfig[property][0].toDateString());
-                const to = new Date(filterConfig[property][1].toDateString());
-                const created = new Date(post.createdAt.toDateString());
+  static async addPost(post = {}) {
+    const localPost = model._fillData(post);
 
-                if (from > created || to < created) {
-                  return false;
-                }
-              } else {
-                for (const id in this.filterConfig[property]) {
-                  if (!post[property].find((x) => x === this.filterConfig[property][id])) {
-                    return false;
-                  }
-                }
-              }
-            } else if (post[property] !== this.filterConfig[property]) {
-              return false;
-            }
-          }
+    const response = await fetch('/tweets', {
+      method: 'POST',
+      body: JSON.stringify(localPost),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-          return true;
-        });
+    return response.json();
+  }
 
-        return result.sort((l, r) => r.createdAt - l.createdAt).slice(skip, skip + top);
-      }
+  static async removePost(id = 0) {
+    const response = await fetch(`/tweets?id=${id}`, {
+      method: 'DELETE',
+    });
+    return response.ok;
+  }
 
-      static getPost(id = 0) {
-        return model._posts.find((post) => post.id === id);
-      }
+  static async editPost(id = 0, post = {}) {
+    const localPost = model._fillData(post);
 
-      static addPost(post = {}) {
-        if (!model.validatePost(post)) {
-          return false;
-        }
+    const response = await fetch('/tweets', {
+      method: 'PUT',
+      body: JSON.stringify(localPost),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-        const localPost = { ...post };
-        if (!localPost.hasOwnProperty('author')) {
-          localPost.author = currentAuthor;
-        }
-        if (!localPost.hasOwnProperty('id')) {
-          localPost.id = (Number(model._getPostWithMaxId()?.id) + 1 || 1).toString();
-        }
-        if (!localPost.hasOwnProperty('createdAt')) {
-          localPost.createdAt = new Date(Date.now());
-        }
-        if (!localPost.hasOwnProperty('likes')) {
-          localPost.likes = [];
-        }
-        if (!localPost.hasOwnProperty('hashTags')) {
-          localPost.hashTags = [];
-        }
+    return await response.json();
+  }
 
-        const tagRegex = /#(\w)+/g;
-        const tags = localPost.description.match(tagRegex);
-        tags?.forEach((tag) => {
-          const tagStripped = tag.substr(1);
-          if (localPost.hashTags.indexOf(tagStripped) === -1) {
-            localPost.hashTags.push(tagStripped);
-          }
-        });
+  static async addLike(id = 0, author = '') {
+    const response = await fetch(`/tweets/like?id=${id}&author=${author}`, {
+      method: 'POST',
+    });
 
-        model._posts.push(localPost);
-        localStorage.setItem(localPost.id, JSON.stringify(localPost));
-        return true;
-      }
+    return response.ok;
+  }
 
-      static removePost(id = '') {
-        const l = model._posts.length;
-        model._posts = model._posts.filter((post) => post.id !== id);
-        localStorage.removeItem(id);
+  static async findUsername(username = '') {
+    const response = await fetch(`/tweets/login?username=${username}`);
+    return response.ok;
+  }
 
-        return l !== model._posts.length;
-      }
+  static async getAllAuthors() {
+    const response = await fetch('/tweets/authors');
+    return response.json();
+  }
 
-      static editPost(id = '', post = {}) {
-        const curPost = model.getPost(id);
-        if (!curPost || !model._validateSchema(post, post)) {
-          return false;
-        }
+  static async getAllTags() {
+    const response = await fetch('/tweets/tags');
+    return response.json();
+  }
 
-        Object.keys(post)
-          .forEach((key) => curPost[key] = post[key]);
+  static async uploadImage(event) {
+    if (event.target.elements.file.value.length === 0) {
+      throw new Error('No file found');
+    }
 
-        return true;
-      }
+    const formData = new FormData();
+    formData.append('file', event.target.elements.file.files[0]);
 
-      static addAll(posts = []) {
-        return posts.filter((post) => !model.addPost(post));
-      }
+    const response = await fetch('/image', {
+      method: 'POST',
+      body: formData,
+    });
 
-      static clear() {
-        model._posts = [];
-      }
-
-      static restoreFromLocalStorage() {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (Number.parseInt(key)) {
-            const post = JSON.parse(localStorage.getItem(key));
-            post.createdAt = new Date(post.createdAt);
-            model._posts.push(post);
-          }
-        }
-        currentAuthor = localStorage.getItem('author');
-      }
+    return response.text();
+  }
 }
-model._postSchema.description.required = true;

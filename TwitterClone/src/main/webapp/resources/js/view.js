@@ -1,7 +1,7 @@
 class view {
     static _postViewSchema = {
       id: (postView, post) => postView.firstElementChild.id = post.id,
-      photoLink: (postView, post) => postView.querySelector('[data-target="photoLink"]').style = `background-image: url(${post.photoLink});`,
+      photoLink: (postView, post) => postView.querySelector('[data-target="photoLink"]').style = `background-image: url(/image?name=${post.photoLink});`,
       description: (postView, post) => postView.querySelector('[data-target="description"]').textContent = post.description,
       createdAt: (postView, post) => postView.querySelector('[data-target="createdAt"]').textContent = post.createdAt,
       hashTags: (postView, post) => {
@@ -55,10 +55,6 @@ class view {
     static _authors = [];
 
     static displayPostInFront(post = {}) {
-      if (!model.validatePost(post)) {
-        return false;
-      }
-
       this.postView = document.importNode(view._postTemplate.content, true);
       Object.keys(post).forEach((key) => view._postViewSchema[key]?.(this.postView, post));
       view._feedContainer.insertBefore(this.postView, view._feedContainer.firstElementChild.nextElementSibling);
@@ -68,10 +64,6 @@ class view {
     }
 
     static displayPost(post = {}) {
-      if (!model.validatePost(post)) {
-        return false;
-      }
-
       this.postView = document.importNode(view._postTemplate.content, true);
       Object.keys(post).forEach((key) => view._postViewSchema[key]?.(this.postView, post));
       view._feedContainer.insertBefore(this.postView, view._feedContainer.lastElementChild);
@@ -103,15 +95,18 @@ class view {
       });
     }
 
-    static removePost(id = '') {
-        document.getElementById(id)?.remove();
+    static removePost(id = 0) {
+        document.getElementById(id.toString())?.remove();
     }
 
-    static updatePost(id = '') {
+    static async updatePost(id = 0) {
       this.postView = document.importNode(view._postTemplate.content, true);
-      const editedPost = model.getPost(id);
-      Object.keys(editedPost).forEach((key) => view._postViewSchema[key]?.(this.postView, editedPost));
-      document.getElementById(id).replaceWith(this.postView);
+      const editedPost = await model.getPost(id);
+      Object.keys(editedPost)
+        .forEach(
+          (key) => view._postViewSchema[key]?.(this.postView, editedPost),
+        );
+      document.getElementById(id.toString()).replaceWith(this.postView);
     }
 
     static removeAllPosts() {
