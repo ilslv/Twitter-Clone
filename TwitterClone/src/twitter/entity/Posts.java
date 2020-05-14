@@ -20,8 +20,8 @@ public class Posts {
         try {
             newPost = gson.fromJson(postJson, Post.class);
             if (newPost == null ||
-                newPost.description == null ||
-                newPost.description.length() == 0) {
+                    newPost.description == null ||
+                    newPost.description.length() == 0) {
                 return null;
             }
         } catch (JsonSyntaxException e) {
@@ -317,7 +317,10 @@ public class Posts {
 
         try {
             newPost = gson.fromJson(postJson, Post.class);
-            if (newPost == null || newPost.id == 0) {
+            if (newPost == null ||
+                    newPost.id == 0 ||
+                    newPost.description.length() == 0
+            ) {
                 throw new IllegalArgumentException();
             }
         } catch (JsonSyntaxException e) {

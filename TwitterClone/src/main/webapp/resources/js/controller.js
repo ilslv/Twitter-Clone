@@ -34,13 +34,15 @@ class controller {
       try {
         post.photoLink = await model.uploadImage(event);
       } catch (e) {
-        console.log(e);
+        if (e.message !== 'No file found') {
+          alert('Error: Failed image upload');
+        }
       }
 
       window.addPostInFront(post);
 
     } else {
-      console.log('Empty post');
+      alert('Error: empty post');
     }
 
   }
@@ -114,8 +116,10 @@ class controller {
   static async loginLogout(event) {
     if (currentAuthor.length > 0) {
       currentAuthor = '';
+      localStorage.setItem('author', '');
+
       view._userName.textContent = '';
-      view._loginLogoutButton.textContent = 'Войти';
+      view._loginLogoutButton.textContent = 'Р’РѕР№С‚Рё';
       view.removeAllPosts();
 
       let posts = await model.getPosts(0, controller.postsOnSinglePage,
@@ -133,9 +137,10 @@ class controller {
     event.preventDefault();
 
     const username = event.target.firstElementChild.firstElementChild.value;
-    //TODO: 404 error
+    localStorage.setItem('author', username);
+
     if (await model.findUsername(username)) {
-      view._loginLogoutButton.textContent = 'Выйти';
+      view._loginLogoutButton.textContent = 'Р’С‹Р№С‚Рё';
       view._userName.textContent = username;
       currentAuthor = username;
       view.removeAllPosts();
@@ -148,6 +153,8 @@ class controller {
 
       event.target.classList.remove('show');
       view._addPostForm.classList.remove('hide');
+    } else {
+      alert('Error: user not found');
     }
   }
 
@@ -166,11 +173,13 @@ class controller {
     try {
       post.photoLink = await model.uploadImage(event);
     } catch (e) {
-      console.log('Can`t upload image');
+      if (e.message !== 'No file found') {
+        alert('Error: Failed image upload');
+      }
     }
 
-    //TODO: edit failed
-    const editedPost = await model.editPost(post.id, post);
+    const editedPost = await model.editPost(post.id, post).
+        catch(() => alert('Error: post edit failed'));
 
     view.updatePost(event.target.id);
     view.displayTags(editedPost.hashTags);
@@ -181,11 +190,11 @@ class controller {
 
     const editView = document.importNode(view._addPostForm, true);
     editView.id = postView.id;
-    editView.querySelector('[class="add-post-button"]').value = 'Изменить';
+    editView.querySelector('[class="add-post-button"]').value = 'РР·РјРµРЅРёС‚СЊ';
 
     const button = document.createElement('input');
     button.type = 'reset';
-    button.value = 'Отменить';
+    button.value = 'РћС‚РјРµРЅРёС‚СЊ';
     button.classList.add('add-post-button');
     button.style = 'background: var(--bg);';
     editView.lastElementChild.appendChild(button);
@@ -244,14 +253,16 @@ window.onload = async () => {
   view._loginForm.addEventListener('submit', controller.loginFormSubmit);
   view._addPostForm.elements['add-file'].addEventListener('click', controller.addImageButton);
 
+  currentAuthor = localStorage.getItem('author') || '';
+
   if (currentAuthor.length === 0) {
     view._addPostForm.classList.add('hide');
   }
 
   view._userName.textContent = currentAuthor;
   view._loginLogoutButton.textContent = currentAuthor.length > 0
-      ? 'Выйти'
-      : 'Войти';
+      ? 'Р’С‹Р№С‚Рё'
+      : 'Р’РѕР№С‚Рё';
 
   view.displayPosts(
       await model.getPosts(0, controller.postsOnSinglePage, currentFilter),
