@@ -50,7 +50,8 @@
             <form class="add-post-container" name="add">
                 <textarea name="description" placeholder="Что нового?" cols="30" rows="3" maxlength="140"></textarea>
                 <div>
-                    <button class="fas fa-file-image add-image"></button>
+                    <button name="add-file" type="button" class="fas fa-file-image add-image"></button>
+                    <input type="file" class="hide" name="file">
                     <input class="add-post-button" type="submit" value="Отправить">
                 </div>
             </form>

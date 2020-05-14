@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 public class Post {
-    public String id;
+    public int id;
     public String description;
     public Date createdAt;
     public String author;

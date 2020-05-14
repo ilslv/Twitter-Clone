@@ -1,6 +1,7 @@
 package twitter.entity;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class BooleanResponse {
     public boolean success;
@@ -11,6 +12,6 @@ public class BooleanResponse {
 
     @Override
     public String toString() {
-        return (new Gson()).toJson(this);
+        return ((new GsonBuilder()).setPrettyPrinting().create()).toJson(this);
     }
 }

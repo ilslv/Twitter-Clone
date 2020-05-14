@@ -18,42 +18,65 @@ import java.util.stream.Collectors;
 
 @WebServlet("/tweets/*")
 public class Tweets extends HttpServlet {
-    private void getPost(String id, HttpServletResponse resp) throws IOException {
-        int postId;
-        try {
-            postId = Integer.parseInt(id);
-        } catch (NumberFormatException e) {
-            return;
-        }
-
-        Post post = Posts.get(postId);
-        resp.getWriter().print(
-                ((new GsonBuilder())
-                        .setPrettyPrinting()
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                        .create()
-                ).toJson(post)
-        );
-    }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
-        try {
+
+        if (uriList.size() > 2) {
             switch (uriList.get(2)) {
-                case ("id"):
-                    getPost(uriList.get(3), resp);
-                    break;
-                //Future pages will be handled here
-                default:
-                    resp.sendRedirect("/");
+                case "login":
+                    //Check if user exists
+                    if (Posts.findUser(req.getParameter("username"))) {
+                        resp.getWriter().print(
+                                new BooleanResponse(true)
+                        );
+                    } else {
+                        resp.sendError(404);
+                    }
+                    return;
+                case "authors":
+                    List<String> authors = Posts.getAllAuthors();
+
+                    resp.getWriter().print(
+                            ((new GsonBuilder())
+                                    .setPrettyPrinting()
+                                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                    .create()
+                            ).toJson(authors)
+                    );
+
+                    return;
+                case "tags":
+                    List<String> tags = Posts.getAllTags();
+
+                    resp.getWriter().print(
+                            ((new GsonBuilder())
+                                    .setPrettyPrinting()
+                                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                    .create()
+                            ).toJson(tags)
+                    );
             }
-        } catch (IndexOutOfBoundsException e) {
-            String id = req.getParameter("id");
-            if (id != null) {
-                getPost(id, resp);
-            } else {
-                req.getRequestDispatcher("/").forward(req, resp);
+        } else if (req.getParameter("id") != null) {
+            //Get post by id
+            try {
+                int id = Integer.parseInt(req.getParameter("id"));
+                Post post = Posts.get(id);
+
+                if (post == null) {
+                    throw new NumberFormatException();
+                }
+
+                resp.getWriter().print(
+                        ((new GsonBuilder())
+                                .setPrettyPrinting()
+                                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                .create()
+                        ).toJson(post)
+                );
+            } catch (NumberFormatException e) {
+                resp.sendError(404);
             }
         }
     }
@@ -61,46 +84,101 @@ public class Tweets extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
-        String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        if (uriList.size() > 2 && uriList.get(2).equals("search")) {
-            List<Post> filteredPosts = Posts.filter(requestJson);
-            resp.getWriter().print(
-                    ((new GsonBuilder())
-                            .setPrettyPrinting()
-                            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                            .create()
-                    ).toJson(filteredPosts)
-            );
+
+        if (uriList.size() > 2) {
+            if (uriList.get(2).equals("like")) {
+                //Adding like to a post
+                int id;
+                String author;
+
+                try {
+                    id = Integer.parseInt(req.getParameter("id"));
+                    author = req.getParameter("author");
+
+                    if (author == null) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    resp.sendError(400);
+                    return;
+                }
+
+                if (Posts.addLike(id, author)) {
+                    resp.getWriter().print(
+                            new BooleanResponse(true)
+                    );
+                } else {
+                    resp.sendError(400);
+                }
+            } else if (uriList.get(2).equals("search")) {
+                //Filtration
+                String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+                List<Post> filteredPosts = Posts.filter(requestJson);
+                resp.getWriter().print(
+                        ((new GsonBuilder())
+                                .setPrettyPrinting()
+                                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                .create()
+                        ).toJson(filteredPosts)
+                );
+            }
+
         } else {
             //Adding post
-            resp.getWriter().print(
-                    new BooleanResponse(Posts.add(requestJson))
-            );
+            String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
+            Post post = Posts.add(requestJson);
+
+            if (post != null) {
+                resp.getWriter().print(
+                        ((new GsonBuilder())
+                                .setPrettyPrinting()
+                                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                                .create()
+                        ).toJson(post)
+                );
+            } else {
+                resp.sendError(400);
+            }
         }
     }
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        List<String> uriList = Arrays.asList(req.getRequestURI().split("/"));
         int id;
 
         try {
-            if (uriList.size() > 3 && uriList.get(3).equals("id")) {
-                id = Integer.parseInt(uriList.get(3));
-            } else if (req.getParameter("id") != null) {
-                id = Integer.parseInt(req.getParameter("id"));
-            } else {
-                throw new NumberFormatException();
-            }
+            id = Integer.parseInt(req.getParameter("id"));
         } catch (NumberFormatException e) {
-            resp.getWriter().print(
-                    new BooleanResponse(false)
-            );
+            resp.sendError(400);
             return;
         }
 
-        resp.getWriter().print(
-                new BooleanResponse(Posts.remove(id))
-        );
+        if (Posts.remove(id)) {
+            resp.getWriter().print(
+                    new BooleanResponse(true)
+            );
+        } else {
+            resp.sendError(404);
+        }
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String requestJson = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+
+        try {
+            int postId = Posts.edit(requestJson);
+
+            resp.getWriter().print(
+                    ((new GsonBuilder())
+                            .setPrettyPrinting()
+                            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                            .create()
+                    ).toJson(Posts.get(postId))
+            );
+        } catch (IllegalArgumentException e) {
+            resp.sendError(400);
+        }
     }
 }
