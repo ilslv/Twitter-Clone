@@ -17,7 +17,7 @@
 
 body {
     background: var(--bg);
-    font: 1em 'Roboto Light';
+    font: 1em 'Roboto', sans-serif;
     overflow: hidden;
     height: 100vh;
     margin: 0px;
@@ -33,7 +33,7 @@ button {
     text-decoration: none;
     display: inline-block;
     cursor: pointer;
-    font-family: 'Roboto Light';
+    font-family: 'Roboto', sans-serif;
     font-size: 1em;
 }
 
@@ -42,7 +42,7 @@ button:focus, input:focus, textarea:focus, select:focus {
 }
 
 input, textarea, select{
-    font-family: 'Roboto Light';
+    font-family: 'Roboto', sans-serif;
     font-size: 16px;
     padding: 5px 10px;
     border: 0px;
@@ -215,7 +215,7 @@ header {
     background-color: var(--header);
     margin-left: 20px;
     color: white;
-    font-family: 'Roboto Light';
+    font-family: 'Roboto', sans-serif;
     font-size: 1em;
 }
 
@@ -230,8 +230,9 @@ header {
 }
 
 .logo {
-    font-family: 'Roboto Black';
+    font-family: 'Roboto', sans-serif;
     font-size: 20px;
+    font-weight: 800;
     margin-left: 20px;
     color: white;
 }
